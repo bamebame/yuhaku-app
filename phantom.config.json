@@ -1,0 +1,7 @@
+{
+  "postCreate": {
+    "copyFiles": [".env.local"],
+    "commands": ["npm install"]
+  }
+}
+
