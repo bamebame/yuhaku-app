@@ -16,6 +16,10 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="ja">
+			<head>
+				{/* Epson ePOS SDK */}
+				<script src="/libs/epos-2.27.0.js" async />
+			</head>
 			<body className={inter.className}>{children}</body>
 		</html>
 	);

@@ -10,6 +10,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { checkoutSasCaseFormAction } from "@/features/sas_cases/actions";
 import { useToast } from "@/hooks/use-toast";
+import { useReceiptPrinter } from "@/features/receipt/hooks/use-receipt-printer";
+import type { 
+  ReceiptData, 
+  ReceiptCartItem, 
+  PaymentInfo,
+  StoreInfo,
+  TransactionInfo,
+  ReceiptSummary 
+} from "@/lib/receipt-printer";
+import { PrinterSettingsDialog } from "@/features/receipt/components";
 
 export function CartPanel() {
 	const router = useRouter();
@@ -18,6 +28,19 @@ export function CartPanel() {
 	const [isEditingCaseAdjustment, setIsEditingCaseAdjustment] = useState(false);
 	const [caseAdjustmentInput, setCaseAdjustmentInput] = useState("0");
 	const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+
+	// レシートプリンター
+	const receiptPrinter = useReceiptPrinter({
+		autoConnect: false,
+		onError: (error) => {
+			console.error("プリンターエラー:", error);
+			toast({
+				title: "プリンターエラー",
+				description: error.message,
+				variant: "destructive",
+			});
+		}
+	});
 
 	// 表示用のアイテム（削除済みを除く）
 	const visibleItems = cartItems.filter((item) => item.action !== "DELETE");
@@ -47,18 +70,20 @@ export function CartPanel() {
 	};
 
 	const handleCheckout = async (payments: PaymentData[]) => {
-		if (!caseId) return;
+		if (!caseId || !originalCase) return;
 
 		try {
-			// フォームデータを作成
+			// 支払い情報をcharges形式に変換
 			const formData = new FormData();
-			formData.append("id", caseId);
 			
-			// 支払い情報をJSON文字列として送信
-			formData.append("payments", JSON.stringify(payments));
+			// charges配列をFormDataに追加
+			payments.forEach((payment, index) => {
+				formData.append(`charges[${index}][paymentId]`, payment.paymentId);
+				formData.append(`charges[${index}][amount]`, payment.amount.toString());
+			});
 
 			// Server Actionを呼び出し
-			const result = await checkoutSasCaseFormAction(null, formData);
+			const result = await checkoutSasCaseFormAction(caseId, null, formData);
 
 			if (result.result?.status === "error") {
 				toast({
@@ -72,8 +97,19 @@ export function CartPanel() {
 					description: "販売が完了しました",
 				});
 				
-				// TODO: レシート印刷処理
-				console.log("レシート印刷:", result.data);
+				// レシート印刷処理
+				if (receiptPrinter.isConnected) {
+					const receiptData = createReceiptData(payments);
+					const printResult = await receiptPrinter.printReceipt(receiptData);
+					
+					if (!printResult.success) {
+						toast({
+							title: "印刷エラー",
+							description: "レシート印刷に失敗しました。手動で印刷してください。",
+							variant: "destructive",
+						});
+					}
+				}
 				
 				// 一覧画面に戻る
 				router.push("/sas-cases");
@@ -87,14 +123,105 @@ export function CartPanel() {
 		}
 	};
 
+	// レシートデータの作成
+	const createReceiptData = (payments: PaymentData[]): ReceiptData => {
+		const now = new Date();
+		
+		// 店舗情報（仮データ）
+		const storeInfo: StoreInfo = {
+			name: originalCase?.store.name || "YUHAKU 店舗",
+			address: "東京都渋谷区渋谷1-1-1",
+			phone: "03-1234-5678",
+			registerId: "01",
+		};
+
+		// 取引情報
+		const transactionInfo: TransactionInfo = {
+			id: caseId || "",
+			date: now,
+			staffName: originalCase?.staff?.name || "スタッフ",
+			staffId: originalCase?.staff?.id || "00001",
+		};
+
+		// カート商品をレシート商品に変換
+		const receiptItems: ReceiptCartItem[] = visibleItems.map(item => ({
+			id: item.id,
+			code: item.product.code || "",
+			name: item.product.title,
+			quantity: item.quantity,
+			unitPrice: item.unitPrice,
+			unitAdjustment: item.unitAdjustment,
+			total: (item.unitPrice + item.unitAdjustment) * item.quantity,
+		}));
+
+		// サマリー情報
+		const subtotal = visibleItems.reduce(
+			(sum, item) => sum + item.unitPrice * item.quantity,
+			0,
+		);
+		const adjustmentTotal = visibleItems.reduce(
+			(sum, item) => sum + item.unitAdjustment * item.quantity,
+			0,
+		);
+		const caseAdjustment = originalCase?.summary?.caseAdjustment || 0;
+		const couponDiscount = originalCase?.summary?.couponAdjustment || 0;
+		const total = subtotal + adjustmentTotal + caseAdjustment + couponDiscount;
+
+		const summary: ReceiptSummary = {
+			subtotal,
+			caseAdjustment,
+			couponDiscount,
+			total,
+			tax: Math.floor(total * 0.1 / 1.1), // 税込み価格から税額を逆算
+			taxRate: 10,
+		};
+
+		// 支払い情報
+		const paymentInfo: PaymentInfo[] = payments.map(payment => ({
+			method: payment.method as 'cash' | 'credit' | 'electronic' | 'gift',
+			methodName: getPaymentMethodName(payment.method),
+			amount: payment.amount,
+		}));
+
+		// 預かり金額とお釣り
+		const deposit = payments.reduce((sum, p) => sum + p.amount, 0);
+		const change = deposit - total;
+
+		return {
+			store: storeInfo,
+			transaction: transactionInfo,
+			items: receiptItems,
+			summary,
+			payments: paymentInfo,
+			deposit,
+			change,
+			memberId: originalCase?.memberId || undefined,
+			customerNote: originalCase?.customerNote || undefined,
+		};
+	};
+
+	// 支払い方法の日本語名を取得
+	const getPaymentMethodName = (method: string): string => {
+		const methodNames: Record<string, string> = {
+			cash: "現金",
+			credit: "クレジットカード",
+			electronic: "電子マネー",
+			gift: "ギフトカード",
+		};
+		return methodNames[method] || method;
+	};
+
 	return (
 		<div className="h-full flex flex-col bg-pos-light">
 			{/* ヘッダー */}
 			<div className="p-4 border-b-2 border-pos-border bg-pos-background">
-				<h2 className="text-pos-lg font-semibold flex items-center gap-2">
-					<ShoppingCart className="h-5 w-5" />
-					カート ({visibleItems.length}点)
-				</h2>
+				<div className="flex items-center justify-between">
+					<h2 className="text-pos-lg font-semibold flex items-center gap-2">
+						<ShoppingCart className="h-5 w-5" />
+						カート ({visibleItems.length}点)
+					</h2>
+					<PrinterSettingsDialog printer={receiptPrinter} />
+				</div>
 			</div>
 
 			{/* カートアイテム */}

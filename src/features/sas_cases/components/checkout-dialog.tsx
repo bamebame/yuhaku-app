@@ -23,14 +23,15 @@ export interface PaymentData {
 	paymentId: string;
 	paymentName: string;
 	amount: number;
+	method: string; // 支払い方法タイプ
 }
 
 // 決済方法の定義（実際はAPIから取得）
 const paymentMethods = [
-	{ id: "1", name: "現金", icon: Banknote },
-	{ id: "2", name: "クレジットカード", icon: CreditCard },
-	{ id: "3", name: "電子マネー", icon: Smartphone },
-	{ id: "4", name: "ギフト券", icon: Gift },
+	{ id: "1", name: "現金", icon: Banknote, method: "cash" },
+	{ id: "2", name: "クレジットカード", icon: CreditCard, method: "credit" },
+	{ id: "3", name: "電子マネー", icon: Smartphone, method: "electronic" },
+	{ id: "4", name: "ギフト券", icon: Gift, method: "gift" },
 ];
 
 export function CheckoutDialog({
@@ -40,11 +41,11 @@ export function CheckoutDialog({
 	onConfirm,
 }: CheckoutDialogProps) {
 	const [payments, setPayments] = useState<PaymentData[]>([
-		{ paymentId: "1", paymentName: "現金", amount: total },
+		{ paymentId: "1", paymentName: "現金", amount: total, method: "cash" },
 	]);
 	const [change, setChange] = useState(0);
 
-	const handlePaymentMethodSelect = (methodId: string, methodName: string) => {
+	const handlePaymentMethodSelect = (methodId: string, methodName: string, method: string) => {
 		// すでに選択されている場合は何もしない
 		if (payments.some((p) => p.paymentId === methodId)) return;
 
@@ -53,7 +54,7 @@ export function CheckoutDialog({
 		if (remainingAmount > 0) {
 			setPayments([
 				...payments,
-				{ paymentId: methodId, paymentName: methodName, amount: remainingAmount },
+				{ paymentId: methodId, paymentName: methodName, amount: remainingAmount, method },
 			]);
 		}
 	};
@@ -123,7 +124,7 @@ export function CheckoutDialog({
 										variant={isSelected ? "default" : "outline"}
 										className="h-20 flex-col"
 										onClick={() =>
-											handlePaymentMethodSelect(method.id, method.name)
+											handlePaymentMethodSelect(method.id, method.name, method.method)
 										}
 										disabled={isSelected}
 									>
