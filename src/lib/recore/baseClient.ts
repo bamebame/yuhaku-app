@@ -119,6 +119,29 @@ export class BaseClient {
 	}
 
 	/**
+	 * 指定されたURLへのGETリクエストを実行し、ヘッダー情報も返します
+	 * @param path エンドポイントパス
+	 * @param params クエリパラメータ
+	 * @param options リクエストオプション
+	 * @returns レスポンスデータとヘッダー
+	 */
+	protected async getWithHeaders<
+		T,
+		P extends Record<string, unknown> = Record<string, unknown>,
+	>(
+		path: string,
+		params: P = {} as P,
+		options: RequestOptions = {},
+	): Promise<{ data: T; headers: Record<string, string> }> {
+		const url = this.buildUrl(path, params);
+		return this.requestWithHeaders<T>({
+			method: "GET",
+			url,
+			...options,
+		});
+	}
+
+	/**
 	 * 指定されたURLへのPOSTリクエストを実行します
 	 * @param path エンドポイントパス
 	 * @param body リクエストボディ
@@ -285,6 +308,121 @@ export class BaseClient {
 			}
 
 			return responseData as T;
+		} catch (error) {
+			clearTimeout(timeoutId);
+
+			if (error instanceof RecoreError) {
+				throw error;
+			}
+
+			if (error instanceof Error) {
+				if (error.name === "AbortError") {
+					throw new RecoreError("Request timeout", "TIMEOUT_ERROR", {
+						timeout,
+					});
+				}
+				throw new RecoreError(error.message, "NETWORK_ERROR");
+			}
+
+			throw new RecoreError("Unknown error occurred", "UNKNOWN_ERROR");
+		}
+	}
+
+	/**
+	 * HTTPリクエストを実行し、ヘッダー情報も返します
+	 * @param config リクエスト設定
+	 * @returns レスポンスデータとヘッダー
+	 */
+	private async requestWithHeaders<T>(config: {
+		method: string;
+		url: string;
+		body?: unknown;
+		headers?: Record<string, string>;
+		timeout?: number;
+	}): Promise<{ data: T; headers: Record<string, string> }> {
+		const controller = new AbortController();
+		const timeout = config.timeout || this.timeout;
+
+		const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+		try {
+			const headers: Record<string, string> = {
+				"X-Identification": JWT_KEY,
+				...this.baseHeaders,
+				...this.context.headers,
+				...config.headers,
+			};
+
+			// POSTやPUTリクエストの場合のみContent-Typeを追加
+			if (config.method === "POST" || config.method === "PUT" || config.method === "PATCH") {
+				headers["Content-Type"] = "application/json";
+			}
+
+			if (DEBUG_API) {
+				console.log("ReCORE API Request with Headers:", {
+					method: config.method,
+					url: config.url,
+					headers: {
+						...headers,
+						"X-Identification": headers["X-Identification"] ? "[REDACTED]" : undefined,
+					},
+					body: config.body,
+				});
+			}
+
+			const response = await fetch(config.url, {
+				method: config.method,
+				headers,
+				body: config.body ? JSON.stringify(config.body) : undefined,
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			const responseText = await response.text();
+			let responseData: any;
+
+			try {
+				responseData = JSON.parse(responseText);
+			} catch (e) {
+				if (DEBUG_API) {
+					console.error("Failed to parse response:", responseText);
+				}
+				throw new RecoreError(
+					`Invalid JSON response: ${responseText}`,
+					"PARSE_ERROR",
+					{ responseText },
+					response.status,
+				);
+			}
+
+			// レスポンスヘッダーを取得
+			const responseHeaders: Record<string, string> = {};
+			response.headers.forEach((value, key) => {
+				responseHeaders[key.toLowerCase()] = value;
+			});
+
+			if (DEBUG_API) {
+				console.log("ReCORE API Response with Headers:", {
+					status: response.status,
+					data: responseData,
+					headers: responseHeaders,
+				});
+			}
+
+			if (!response.ok) {
+				throw new RecoreError(
+					responseData.message || `HTTP error! status: ${response.status}`,
+					responseData.code || "HTTP_ERROR",
+					responseData.details,
+					response.status,
+				);
+			}
+
+			return {
+				data: responseData as T,
+				headers: responseHeaders,
+			};
 		} catch (error) {
 			clearTimeout(timeoutId);
 

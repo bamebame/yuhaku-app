@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PosLayout } from "@/components/pos/layout";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthenticatedProviders } from "./providers";
 
 export default async function AuthenticatedLayout({
 	children,
@@ -18,9 +19,9 @@ export default async function AuthenticatedLayout({
 	}
 
 	return (
-		<>
+		<AuthenticatedProviders>
 			<PosLayout>{children}</PosLayout>
 			<Toaster />
-		</>
+		</AuthenticatedProviders>
 	);
 }

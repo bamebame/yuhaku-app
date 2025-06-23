@@ -38,7 +38,13 @@ export async function GET(request: NextRequest) {
 		// データ取得
 		const result = await client.list(params);
 
-		return apiResponse.success(result);
+		// レスポンスにバージョン情報を追加
+		return new Response(JSON.stringify({ data: result }), {
+			headers: {
+				'Content-Type': 'application/json',
+				'X-Data-Version': 'categories-2025-01-01', // カテゴリは変更頻度が低い
+			},
+		});
 	} catch (error) {
 		return apiResponse.error(error);
 	}

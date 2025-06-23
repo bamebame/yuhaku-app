@@ -34,5 +34,5 @@ export async function loginAction(
 		};
 	}
 
-	redirect("/");
+	redirect("/sas-cases");
 }

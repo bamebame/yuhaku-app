@@ -29,4 +29,41 @@ export class ProductsClient extends BaseClient {
 		const response = await this.get<RecoreProduct>(`/products/${id}`);
 		return convertRecoreProductToProduct(response);
 	}
+
+	/**
+	 * カーソルページネーションで全商品を取得
+	 */
+	async listAll(params: Omit<ProductSearchParams, 'page' | 'cursor'> = {}): Promise<Product[]> {
+		const allProducts: Product[] = [];
+		let cursor = '';
+		const limit = params.limit || 100;
+
+		while (true) {
+			const recoreParams = convertProductSearchParamsToRecore({
+				...params,
+				limit,
+				cursor,
+			});
+
+			// カーソルページネーション対応のリクエスト
+			const response = await this.getWithHeaders<RecoreProduct[]>(
+				"/products",
+				recoreParams as Record<string, unknown>,
+			);
+
+			// レスポンスデータを変換
+			const products = response.data.map(convertRecoreProductToProduct);
+			allProducts.push(...products);
+
+			// X-Next-Cursorヘッダーを取得
+			const nextCursor = response.headers['x-next-cursor'];
+			if (!nextCursor) {
+				break;
+			}
+
+			cursor = nextCursor;
+		}
+
+		return allProducts;
+	}
 }

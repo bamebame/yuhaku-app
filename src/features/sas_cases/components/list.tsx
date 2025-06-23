@@ -14,9 +14,9 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { PosButton } from "@/components/pos";
 import Link from "next/link";
-import { Eye, Edit } from "lucide-react";
+import { Eye, Edit, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const fetcher = async (url: string) => {
@@ -33,8 +33,8 @@ export function SasCasesList() {
 		data: cases,
 		error,
 		isLoading,
-	} = useSWR<SasCase[]>("/api/sas-cases", fetcher, {
-		refreshInterval: 30000, // 30秒ごとに自動更新
+	} = useSWR<SasCase[]>("/api/sas-cases?status=IN_PROGRESS", fetcher, {
+		refreshInterval: 10000, // 10秒ごとに自動更新（進行中ケースは頻繁に更新）
 	});
 	const { toast } = useToast();
 
@@ -55,7 +55,8 @@ export function SasCasesList() {
 	if (!cases || cases.length === 0) {
 		return (
 			<div className="text-center py-12">
-				<p className="text-muted-foreground">販売ケースがありません</p>
+				<p className="text-pos-muted text-lg">進行中の販売ケースはありません</p>
+				<p className="text-pos-muted text-sm mt-2">上のボタンから新規販売を開始してください</p>
 			</div>
 		);
 	}
@@ -96,50 +97,39 @@ export function SasCasesList() {
 	};
 
 	return (
-		<div className="rounded-md border">
-			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>コード</TableHead>
-						<TableHead>ステータス</TableHead>
-						<TableHead>店舗</TableHead>
-						<TableHead>スタッフ</TableHead>
-						<TableHead className="text-right">合計金額</TableHead>
-						<TableHead>作成日時</TableHead>
-						<TableHead className="text-right">アクション</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{(cases || []).map((sasCase) => (
-						<TableRow key={sasCase.id}>
-							<TableCell className="font-mono">{sasCase.code}</TableCell>
-							<TableCell>{getStatusBadge(sasCase.status)}</TableCell>
-							<TableCell>{sasCase.store?.name || "-"}</TableCell>
-							<TableCell>{sasCase.staff?.name || "-"}</TableCell>
-							<TableCell className="text-right">
-								¥{sasCase.summary?.total.toLocaleString() || 0}
-							</TableCell>
-							<TableCell>{formatDateTime(sasCase.createdAt)}</TableCell>
-							<TableCell className="text-right">
-								<div className="flex justify-end gap-2">
-									<Link href={`/sas-cases/${sasCase.id}`}>
-										<Button variant="ghost" size="icon">
-											<Eye className="h-4 w-4" />
-										</Button>
-									</Link>
-									{sasCase.status === "IN_PROGRESS" && (
-										<Link href={`/sas-cases/${sasCase.id}/edit`}>
-											<Button variant="ghost" size="icon">
-												<Edit className="h-4 w-4" />
-											</Button>
-										</Link>
-									)}
-								</div>
-							</TableCell>
-						</TableRow>
-					))}
-				</TableBody>
-			</Table>
+		<div className="space-y-4">
+			{(cases || []).map((sasCase) => (
+				<div 
+					key={sasCase.id} 
+					className="border-2 border-pos-border bg-pos-background p-4 hover:bg-pos-hover transition-colors"
+				>
+					<div className="flex items-center justify-between">
+						<div className="flex-1">
+							<div className="flex items-center gap-4 mb-2">
+								<span className="font-mono text-lg font-bold">{sasCase.code}</span>
+								<span className="text-sm text-pos-muted">
+									{formatDateTime(sasCase.createdAt)}
+								</span>
+							</div>
+							<div className="flex items-center gap-6 text-sm">
+								<span>スタッフ: {sasCase.staff?.name || "-"}</span>
+								<span>商品数: {sasCase.summary?.quantity || 0}点</span>
+								<span className="font-bold text-lg">
+									¥{sasCase.summary?.total.toLocaleString() || 0}
+								</span>
+							</div>
+						</div>
+						<div>
+							<Link href={`/sas-cases/${sasCase.id}`}>
+								<PosButton size="lg" className="font-bold">
+									<ShoppingCart className="mr-2 h-5 w-5" />
+									販売を続ける
+								</PosButton>
+							</Link>
+						</div>
+					</div>
+				</div>
+			))}
 		</div>
 	);
 }

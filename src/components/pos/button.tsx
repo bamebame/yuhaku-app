@@ -4,12 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const posButtonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-pos-foreground text-white border-2 border-pos-border hover:bg-pos-muted hover:text-white disabled:bg-pos-muted disabled:text-white disabled:opacity-100",
-        secondary: "bg-pos-background text-black border-2 border-pos-border hover:bg-pos-hover disabled:bg-pos-light disabled:text-pos-muted disabled:opacity-100",
+        default: "bg-pos-foreground !text-white border-2 border-pos-border hover:bg-pos-muted hover:!text-white disabled:bg-pos-muted disabled:!text-white",
+        secondary: "bg-pos-background text-black border-2 border-pos-border hover:bg-pos-hover disabled:bg-pos-light disabled:text-pos-muted",
         ghost: "hover:bg-pos-hover hover:text-black",
         destructive: "bg-destructive text-destructive-foreground border-2 border-destructive hover:bg-destructive/90",
         outline: "border-2 border-pos-border bg-transparent hover:bg-pos-hover",

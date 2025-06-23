@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { CategoryTabs } from "./category-tabs";
 import { ProductGrid } from "./product-grid";
+import { useCachedProducts, useCachedCategories } from "@/lib/cache";
 import type { Category } from "@/features/categories/types";
 import type { Product } from "@/features/products/types";
 import type { Item, ItemStock } from "@/features/items/types";
@@ -26,23 +27,9 @@ export function ProductSelectionPanel() {
 	const { selectedCategoryId, setCategories, setProducts, setProductStocks, products: storeProducts } =
 		useSasCaseEditStore();
 
-	// カテゴリ取得
-	const { data: categoriesResponse } = useSWR<{ data: Category[] }>("/api/categories", fetcher, {
-		revalidateOnFocus: false,
-		revalidateOnReconnect: false,
-		refreshInterval: 3600000, // 1時間
-	});
-
-	// 商品取得
-	const { data: productsResponse } = useSWR<{ data: Product[] }>(
-		"/api/products?limit=100&status=ACTIVE",
-		fetcher,
-		{
-			revalidateOnFocus: false,
-			revalidateOnReconnect: false,
-			refreshInterval: 900000, // 15分
-		},
-	);
+	// キャッシュからカテゴリと商品を取得
+	const { categories: cachedCategories, isLoading: categoriesLoading } = useCachedCategories();
+	const { products: cachedProducts, isLoading: productsLoading } = useCachedProducts();
 
 	// 表示中の商品の在庫を取得
 	const productIds = displayedProducts.map((p) => p.id).join(",");
@@ -56,21 +43,23 @@ export function ProductSelectionPanel() {
 
 	// カテゴリデータをストアに保存
 	useEffect(() => {
-		const categoriesJson = JSON.stringify(categoriesResponse?.data || []);
-		if (categoriesJson !== prevCategoriesRef.current && categoriesResponse?.data?.length) {
+		if (!cachedCategories) return;
+		const categoriesJson = JSON.stringify(cachedCategories);
+		if (categoriesJson !== prevCategoriesRef.current && cachedCategories.length > 0) {
 			prevCategoriesRef.current = categoriesJson;
-			setCategories(categoriesResponse.data);
+			setCategories(cachedCategories);
 		}
-	}, [categoriesResponse, setCategories]);
+	}, [cachedCategories, setCategories]);
 
 	// 商品データをストアに保存
 	useEffect(() => {
-		const productsJson = JSON.stringify(productsResponse?.data || []);
-		if (productsJson !== prevProductsRef.current && productsResponse?.data?.length) {
+		if (!cachedProducts) return;
+		const productsJson = JSON.stringify(cachedProducts);
+		if (productsJson !== prevProductsRef.current && cachedProducts.length > 0) {
 			prevProductsRef.current = productsJson;
-			setProducts(productsResponse.data);
+			setProducts(cachedProducts);
 		}
-	}, [productsResponse, setProducts]);
+	}, [cachedProducts, setProducts]);
 
 	// 在庫データをストアに保存
 	useEffect(() => {
@@ -103,7 +92,7 @@ export function ProductSelectionPanel() {
 		}
 	}, [itemsResponse, setProductStocks]);
 
-	// カテゴリフィルタリング
+	// カテゴリフィルタリング（子カテゴリも含む）
 	useEffect(() => {
 		if (!storeProducts || storeProducts.length === 0) {
 			setDisplayedProducts([]);
@@ -114,13 +103,42 @@ export function ProductSelectionPanel() {
 			// 全商品を表示
 			setDisplayedProducts(storeProducts);
 		} else {
-			// カテゴリでフィルタ
-			const filtered = storeProducts.filter(
-				(product) => product.categoryId === selectedCategoryId,
-			);
+			// カテゴリでフィルタ（選択したカテゴリおよびその子カテゴリの商品を表示）
+			const filtered = storeProducts.filter((product) => {
+				// 商品のカテゴリが選択されたカテゴリと一致
+				if (product.categoryId === selectedCategoryId) {
+					return true;
+				}
+				
+				// 商品が所属するカテゴリの情報を取得
+				const productCategory = cachedCategories?.find(
+					(cat) => cat.id === product.categoryId
+				);
+				
+				// 商品のカテゴリの祖先に選択されたカテゴリが含まれているかチェック
+				if (productCategory?.ancestors) {
+					return productCategory.ancestors.some(
+						(ancestor) => ancestor.id === selectedCategoryId
+					);
+				}
+				
+				return false;
+			});
 			setDisplayedProducts(filtered);
 		}
-	}, [storeProducts, selectedCategoryId]);
+	}, [storeProducts, selectedCategoryId, cachedCategories]);
+
+	// 初期ローディング中の表示
+	if (categoriesLoading || productsLoading) {
+		return (
+			<div className="h-full flex items-center justify-center">
+				<div className="text-center">
+					<div className="text-lg font-semibold mb-2">データを読み込み中...</div>
+					<div className="text-sm text-pos-muted">初回は時間がかかる場合があります</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="h-full flex flex-col overflow-hidden">

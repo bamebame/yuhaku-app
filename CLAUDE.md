@@ -30,14 +30,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `DEBUG_API=true npm run dev` - API通信デバッグモード
 
 ### 開発サーバー管理ルール
+**🚨 最重要**: 開発サーバーを起動する前に、必ず既存のプロセスを確認・停止すること
 **🚨 重要**: バックグラウンドで開発サーバーを起動した場合は、必ず作業終了後に停止すること
 **🚨 重要**: テスト用に立ち上げた開発サーバーは必ず終了すること
 
-#### 起動前の確認
+#### 起動前の必須確認手順
 ```bash
-# ポートが使用中でないか確認
+# 1. ポートが使用中でないか確認
 lsof -i :3000
+lsof -i :3001
+
+# 2. 既存のnext devプロセスを確認
 ps aux | grep -E "node.*dev|npm run dev|next dev" | grep -v grep
+
+# 3. 既存プロセスがある場合は停止
+lsof -ti :3000 | xargs -r kill -9
+lsof -ti :3001 | xargs -r kill -9
+# または
+ps aux | grep -E "npm run dev|next dev" | grep -v grep | awk '{print $2}' | xargs -r kill -9
 ```
 
 #### 起動と停止（推奨方法）
@@ -61,8 +71,10 @@ mkdir -p ~/bin
 - 全プロセス停止: `pkill -f "next dev" || true`
 
 #### 注意事項
+- **絶対にプロセスを確認せずに起動しないこと**
 - 複数の開発サーバーが起動していると、ポート競合やメモリリークの原因となる
 - テスト終了時は必ずプロセスの終了を確認すること
+- ポート3000が使用中の場合、Next.jsは自動的に3001, 3002...と別ポートを使用するが、これは避けるべき
 
 ## Development Rules
 

@@ -25,7 +25,7 @@ export function SasCaseNewForm() {
 					description: "新しい販売ケースを作成しました",
 				});
 				// 編集画面に遷移
-				router.push(`/sas-cases/${result.data.id}/edit`);
+				router.push(`/sas-cases/${result.data.id}`);
 			} else {
 				throw new Error("作成に失敗しました");
 			}
