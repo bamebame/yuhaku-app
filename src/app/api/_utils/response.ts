@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { RecoreError } from "@/lib/recore/baseClient"
+import { NextResponse } from "next/server";
+import { RecoreError } from "@/lib/recore/baseClient";
 
 /**
  * API レスポンスヘルパー
@@ -9,49 +9,70 @@ export const apiResponse = {
 	 * 成功レスポンスを返す
 	 */
 	success: <T>(data: T, status = 200) => {
-		return NextResponse.json({ data }, { status })
+		return NextResponse.json({ data }, { status });
 	},
 
 	/**
 	 * エラーレスポンスを返す
 	 */
 	error: (error: unknown) => {
-		console.error("API Error:", error)
+		// デバッグモードでは詳細なエラー情報を出力
+		if (process.env.DEBUG_API === "true") {
+			console.error("API Error Details:", {
+				error,
+				stack: error instanceof Error ? error.stack : undefined,
+				timestamp: new Date().toISOString(),
+			});
+		} else {
+			console.error("API Error:", error instanceof Error ? error.message : "Unknown error");
+		}
 
 		if (error instanceof RecoreError) {
+			// 本番環境では機密情報を含む可能性のある詳細を除外
+			const safeDetails = process.env.NODE_ENV === "production" 
+				? undefined 
+				: error.details;
+
 			return NextResponse.json(
 				{
 					error: {
 						message: error.message,
 						code: error.code,
-						details: error.details,
+						details: safeDetails,
+						timestamp: new Date().toISOString(),
 					},
 				},
 				{ status: error.status || 500 },
-			)
+			);
 		}
 
 		if (error instanceof Error) {
+			const message = process.env.NODE_ENV === "production"
+				? "エラーが発生しました"
+				: error.message;
+
 			return NextResponse.json(
 				{
 					error: {
-						message: error.message,
+						message,
 						code: "INTERNAL_ERROR",
+						timestamp: new Date().toISOString(),
 					},
 				},
 				{ status: 500 },
-			)
+			);
 		}
 
 		return NextResponse.json(
 			{
 				error: {
-					message: "Internal Server Error",
+					message: "エラーが発生しました",
 					code: "UNKNOWN_ERROR",
+					timestamp: new Date().toISOString(),
 				},
 			},
 			{ status: 500 },
-		)
+		);
 	},
 
 	/**
@@ -66,7 +87,7 @@ export const apiResponse = {
 				},
 			},
 			{ status: 401 },
-		)
+		);
 	},
 
 	/**
@@ -82,7 +103,7 @@ export const apiResponse = {
 				},
 			},
 			{ status: 400 },
-		)
+		);
 	},
 
 	/**
@@ -97,6 +118,6 @@ export const apiResponse = {
 				},
 			},
 			{ status: 404 },
-		)
+		);
 	},
-}
+};

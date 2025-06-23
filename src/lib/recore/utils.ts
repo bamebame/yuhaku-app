@@ -5,19 +5,19 @@
 export function transformParams<T extends Record<string, unknown>>(
 	params: T,
 ): Record<string, string> {
-	const result: Record<string, string> = {}
+	const result: Record<string, string> = {};
 
 	for (const [key, value] of Object.entries(params)) {
 		if (value === undefined || value === null) {
-			continue
+			continue;
 		}
 
 		if (Array.isArray(value)) {
-			result[key] = value.join(",")
+			result[key] = value.join(",");
 		} else {
-			result[key] = String(value)
+			result[key] = String(value);
 		}
 	}
 
-	return result
+	return result;
 }

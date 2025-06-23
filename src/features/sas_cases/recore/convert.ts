@@ -19,7 +19,7 @@ import type {
 	Store,
 	Summary,
 	Tax,
-} from "../types"
+} from "../types";
 import type {
 	RecoreCashier,
 	RecoreChargeInput,
@@ -37,36 +37,36 @@ import type {
 	RecoreStore,
 	RecoreSummary,
 	RecoreTax,
-} from "./types"
+} from "./types";
 
 // 店舗情報の変換
 export function convertRecoreStoreToStore(recore: RecoreStore): Store {
 	return {
 		id: recore.id.toString(),
 		name: recore.name,
-	}
+	};
 }
 
 // スタッフ情報の変換
 export function convertRecoreStaffToStaff(
 	recore: RecoreStaff | null,
 ): Staff | null {
-	if (!recore) return null
+	if (!recore) return null;
 	return {
 		id: recore.id.toString(),
 		name: recore.name,
-	}
+	};
 }
 
 // レジ情報の変換
 export function convertRecoreCashierToCashier(
 	recore: RecoreCashier | null,
 ): Cashier | null {
-	if (!recore) return null
+	if (!recore) return null;
 	return {
 		id: recore.id.toString(),
 		name: recore.name,
-	}
+	};
 }
 
 // クーポン情報の変換
@@ -74,7 +74,7 @@ export function convertRecoreCouponToCoupon(recore: RecoreCoupon): Coupon {
 	return {
 		couponId: recore.coupon_id.toString(),
 		amount: recore.amount,
-	}
+	};
 }
 
 // 販売明細の変換
@@ -96,7 +96,7 @@ export function convertRecoreGoodsToGoods(recore: RecoreGoods): Goods {
 		taxFreeType: recore.tax_free_type,
 		quantity: recore.quantity,
 		reservedQuantity: recore.reserved_quantity,
-	}
+	};
 }
 
 // 税情報の変換
@@ -107,7 +107,7 @@ export function convertRecoreTaxToTax(recore: RecoreTax): Tax {
 		tax: recore.tax,
 		includedTax: recore.included_tax,
 		taxableAmount: recore.taxable_amount,
-	}
+	};
 }
 
 // 免税情報の変換
@@ -118,13 +118,11 @@ export function convertRecoreExemptedTaxToExemptedTax(
 		taxRateType: recore.tax_rate_type,
 		exemptedTax: recore.exempted_tax,
 		exemptibleAmount: recore.exemptible_amount,
-	}
+	};
 }
 
 // サマリーの変換
-export function convertRecoreSummaryToSummary(
-	recore: RecoreSummary,
-): Summary {
+export function convertRecoreSummaryToSummary(recore: RecoreSummary): Summary {
 	return {
 		quantity: recore.quantity,
 		reservedQuantity: recore.reserved_quantity,
@@ -136,13 +134,11 @@ export function convertRecoreSummaryToSummary(
 		exemptedTaxes: recore.exempted_taxes.map(
 			convertRecoreExemptedTaxToExemptedTax,
 		),
-	}
+	};
 }
 
 // 店頭販売ケースの変換
-export function convertRecoreSasCaseToSasCase(
-	recore: RecoreSasCase,
-): SasCase {
+export function convertRecoreSasCaseToSasCase(recore: RecoreSasCase): SasCase {
 	return {
 		id: recore.id.toString(),
 		code: recore.code,
@@ -159,20 +155,18 @@ export function convertRecoreSasCaseToSasCase(
 		coupons: recore.coupons.map(convertRecoreCouponToCoupon),
 		goods: recore.goods.map(convertRecoreGoodsToGoods),
 		summary: convertRecoreSummaryToSummary(recore.summary),
-	}
+	};
 }
 
 // 商品入力の変換（内部→ReCORE）
-export function convertGoodsInputToRecore(
-	input: GoodsInput,
-): RecoreGoodsInput {
+export function convertGoodsInputToRecore(input: GoodsInput): RecoreGoodsInput {
 	return {
 		item_id: Number.parseInt(input.itemId),
 		location_id: Number.parseInt(input.locationId),
 		quantity: input.quantity,
 		unit_price: input.unitPrice,
 		unit_adjustment: input.unitAdjustment,
-	}
+	};
 }
 
 // 商品更新入力の変換（内部→ReCORE）
@@ -187,7 +181,7 @@ export function convertGoodsUpdateInputToRecore(
 		quantity: input.quantity,
 		unit_price: input.unitPrice,
 		unit_adjustment: input.unitAdjustment,
-	}
+	};
 }
 
 // 作成入力の変換（内部→ReCORE）
@@ -204,7 +198,7 @@ export function convertSasCaseCreateInputToRecore(
 		case_adjustment: input.caseAdjustment,
 		coupon_ids: input.couponIds?.map((id) => Number.parseInt(id)),
 		goods: input.goods?.map(convertGoodsInputToRecore),
-	}
+	};
 }
 
 // 更新入力の変換（内部→ReCORE）
@@ -221,7 +215,7 @@ export function convertSasCaseUpdateInputToRecore(
 		case_adjustment: input.caseAdjustment,
 		coupon_ids: input.couponIds?.map((id) => Number.parseInt(id)),
 		goods: input.goods?.map(convertGoodsUpdateInputToRecore),
-	}
+	};
 }
 
 // 金種入力の変換（内部→ReCORE）
@@ -231,7 +225,7 @@ export function convertChargeInputToRecore(
 	return {
 		payment_id: Number.parseInt(input.paymentId),
 		amount: input.amount,
-	}
+	};
 }
 
 // チェックアウト入力の変換（内部→ReCORE）
@@ -240,7 +234,7 @@ export function convertCheckoutInputToRecore(
 ): RecoreCheckoutInput {
 	return {
 		charges: input.charges.map(convertChargeInputToRecore),
-	}
+	};
 }
 
 // 検索パラメータの変換（内部→ReCORE）
@@ -248,14 +242,14 @@ export function convertSasCaseSearchParamsToRecore(
 	params: SasCaseSearchParams,
 ): RecoreSasCaseSearchParams {
 	const formatDate = (date: Date) => {
-		const year = date.getFullYear()
-		const month = String(date.getMonth() + 1).padStart(2, "0")
-		const day = String(date.getDate()).padStart(2, "0")
-		const hours = String(date.getHours()).padStart(2, "0")
-		const minutes = String(date.getMinutes()).padStart(2, "0")
-		const seconds = String(date.getSeconds()).padStart(2, "0")
-		return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-	}
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
+		const hours = String(date.getHours()).padStart(2, "0");
+		const minutes = String(date.getMinutes()).padStart(2, "0");
+		const seconds = String(date.getSeconds()).padStart(2, "0");
+		return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+	};
 
 	return {
 		ids: params.ids?.map((id) => Number.parseInt(id)),
@@ -273,12 +267,10 @@ export function convertSasCaseSearchParamsToRecore(
 		updated_at_to: params.updatedAtTo
 			? formatDate(params.updatedAtTo)
 			: undefined,
-		done_at_from: params.doneAtFrom
-			? formatDate(params.doneAtFrom)
-			: undefined,
+		done_at_from: params.doneAtFrom ? formatDate(params.doneAtFrom) : undefined,
 		done_at_to: params.doneAtTo ? formatDate(params.doneAtTo) : undefined,
 		page: params.page,
 		limit: params.limit,
 		cursor: params.cursor,
-	}
+	};
 }

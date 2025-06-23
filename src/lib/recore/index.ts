@@ -1,9 +1,9 @@
-export { BaseClient, RecoreError } from "./baseClient"
+export { BaseClient, RecoreError } from "./baseClient";
 export type {
 	RecoreApiError,
 	RecoreApiResponse,
 	ReCoreClientOptions,
 	RequestOptions,
-} from "./baseClient"
+} from "./baseClient";
 
-export { SasCasesClient } from "./sas_cases"
+export { SasCasesClient } from "./sas_cases";

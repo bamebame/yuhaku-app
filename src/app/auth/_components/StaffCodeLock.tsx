@@ -1,50 +1,55 @@
-"use client"
+"use client";
 
-import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod"
-import { useState } from "react"
-import { staffCodeSchema } from "@/features/auth/schema/auth"
-import { useAuth } from "../hooks/useAuth"
+import { useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod";
+import { useState } from "react";
+import { staffCodeSchema } from "@/features/auth/schema/auth";
+import { useAuth } from "../hooks/useAuth";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export function StaffCodeLock() {
-	const { unlockWithStaffCode } = useAuth()
-	const [error, setError] = useState<string | null>(null)
+	const { unlockWithStaffCode } = useAuth();
+	const [error, setError] = useState<string | null>(null);
 
 	const [form, fields] = useForm({
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: staffCodeSchema })
+			return parseWithZod(formData, { schema: staffCodeSchema });
 		},
 		shouldValidate: "onBlur",
 		shouldRevalidate: "onInput",
-	})
+	});
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault()
-		const formData = new FormData(e.currentTarget)
-		const submission = parseWithZod(formData, { schema: staffCodeSchema })
+		e.preventDefault();
+		const formData = new FormData(e.currentTarget);
+		const submission = parseWithZod(formData, { schema: staffCodeSchema });
 
 		if (submission.status !== "success") {
-			return
+			return;
 		}
 
 		try {
-			await unlockWithStaffCode(submission.value.code)
-			setError(null)
+			await unlockWithStaffCode(submission.value.code);
+			setError(null);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "エラーが発生しました")
+			setError(err instanceof Error ? err.message : "エラーが発生しました");
 		}
-	}
+	};
 
 	return (
-		<div className="flex min-h-screen items-center justify-center px-4">
-			<div className="w-full max-w-sm space-y-6">
-				<div className="text-center">
-					<h1 className="text-2xl font-bold">スタッフコード入力</h1>
-					<p className="mt-2 text-sm text-muted-foreground">
-						操作を続けるにはスタッフコードを入力してください
-					</p>
-				</div>
-
+		<Card className="w-full max-w-sm">
+			<CardHeader>
+				<CardTitle>スタッフコード入力</CardTitle>
+				<CardDescription>
+					操作を続けるにはスタッフコードを入力してください
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
 				<form
 					id={form.id}
 					onSubmit={handleSubmit}
@@ -52,50 +57,41 @@ export function StaffCodeLock() {
 					noValidate
 				>
 					<div className="space-y-2">
-						<label
-							htmlFor={fields.code.id}
-							className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-						>
+						<Label htmlFor={fields.code.id}>
 							スタッフコード
-						</label>
-						<input
+						</Label>
+						<Input
 							id={fields.code.id}
 							name={fields.code.name}
 							type="text"
 							defaultValue={fields.code.defaultValue}
 							aria-invalid={!fields.code.valid}
 							aria-describedby={fields.code.errorId}
-							className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
 							placeholder="スタッフコードを入力"
 						/>
 						{fields.code.errors && (
-							<p
-								id={fields.code.errorId}
-								className="text-sm text-destructive"
-							>
+							<p id={fields.code.errorId} className="text-sm text-destructive">
 								{fields.code.errors}
 							</p>
 						)}
 					</div>
 
 					{error && (
-						<div className="rounded-md bg-destructive/15 p-3">
-							<p className="text-sm text-destructive">{error}</p>
-						</div>
+						<Alert variant="destructive">
+							<AlertCircle className="h-4 w-4" />
+							<AlertDescription>{error}</AlertDescription>
+						</Alert>
 					)}
 
-					<button
-						type="submit"
-						className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
-					>
+					<Button type="submit" className="w-full">
 						ロック解除
-					</button>
+					</Button>
 				</form>
 
-				<p className="text-center text-sm text-muted-foreground">
+				<p className="mt-4 text-center text-sm text-muted-foreground">
 					テストコード: TESTCODE01
 				</p>
-			</div>
-		</div>
-	)
+			</CardContent>
+		</Card>
+	);
 }

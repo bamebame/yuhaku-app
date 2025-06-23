@@ -1,2 +1,2 @@
-export { AuthGuard } from "./AuthGuard"
-export { StaffCodeLock } from "./StaffCodeLock"
+export { AuthGuard } from "./AuthGuard";
+export { StaffCodeLock } from "./StaffCodeLock";

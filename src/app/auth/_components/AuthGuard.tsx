@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { useAuth } from "../hooks/useAuth"
-import { StaffCodeLock } from "./StaffCodeLock"
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { StaffCodeLock } from "./StaffCodeLock";
 
 interface AuthGuardProps {
-	children: React.ReactNode
+	children: React.ReactNode;
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-	const { user, loading, isLocked } = useAuth()
-	const router = useRouter()
+	const { user, loading, isLocked } = useAuth();
+	const router = useRouter();
 
 	useEffect(() => {
 		if (!loading && !user) {
-			router.push("/auth/login")
+			router.push("/auth/login");
 		}
-	}, [user, loading, router])
+	}, [user, loading, router]);
 
 	if (loading) {
 		return (
@@ -27,16 +27,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
 					<p className="mt-2 text-sm text-muted-foreground">読み込み中...</p>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	if (!user) {
-		return null
+		return null;
 	}
 
 	if (isLocked) {
-		return <StaffCodeLock />
+		return <StaffCodeLock />;
 	}
 
-	return <>{children}</>
+	return <>{children}</>;
 }

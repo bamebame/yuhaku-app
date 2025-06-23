@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod"
-import { useFormState } from "react-dom"
-import { loginAction } from "@/features/auth/actions"
-import { loginSchema } from "@/features/auth/schema/auth"
+import { useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod";
+import { useFormState } from "react-dom";
+import { loginAction } from "@/features/auth/actions";
+import { loginSchema } from "@/features/auth/schema/auth";
 
 export function LoginForm() {
-	const [lastResult, action] = useFormState(loginAction, undefined)
+	const [lastResult, action] = useFormState(loginAction, undefined);
 
 	const [form, fields] = useForm({
 		lastResult: lastResult?.result,
 		onValidate({ formData }) {
-			return parseWithZod(formData, { schema: loginSchema })
+			return parseWithZod(formData, { schema: loginSchema });
 		},
 		shouldValidate: "onBlur",
 		shouldRevalidate: "onInput",
-	})
+	});
 
 	return (
 		<form
@@ -44,10 +44,7 @@ export function LoginForm() {
 					placeholder="user@example.com"
 				/>
 				{fields.email.errors && (
-					<p
-						id={fields.email.errorId}
-						className="text-sm text-destructive"
-					>
+					<p id={fields.email.errorId} className="text-sm text-destructive">
 						{fields.email.errors}
 					</p>
 				)}
@@ -71,10 +68,7 @@ export function LoginForm() {
 					placeholder="••••••••"
 				/>
 				{fields.password.errors && (
-					<p
-						id={fields.password.errorId}
-						className="text-sm text-destructive"
-					>
+					<p id={fields.password.errorId} className="text-sm text-destructive">
 						{fields.password.errors}
 					</p>
 				)}
@@ -93,5 +87,5 @@ export function LoginForm() {
 				ログイン
 			</button>
 		</form>
-	)
+	);
 }

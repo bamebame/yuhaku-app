@@ -1,4 +1,4 @@
-import type { ClientContext } from "./client-factory"
+import type { ClientContext } from "./client-factory";
 
 /**
  * サーバーサイドで使用するクライアントコンテキストを作成
@@ -10,5 +10,5 @@ export async function createServerContext(): Promise<ClientContext> {
 			"X-Store-Id": process.env.RECORE_STORE_ID || "1",
 		},
 		timeout: 30000,
-	}
+	};
 }

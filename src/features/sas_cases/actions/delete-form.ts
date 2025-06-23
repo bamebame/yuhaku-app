@@ -1,25 +1,25 @@
-"use server"
+"use server";
 
-import { parseWithZod } from "@conform-to/zod"
-import type { ActionResult } from "@/features/types"
-import { deleteSasCaseSchema } from "../schema"
-import { deleteSasCaseAction } from "./delete"
+import { parseWithZod } from "@conform-to/zod";
+import type { ActionResult } from "@/features/types";
+import { deleteSasCaseSchema } from "../schema";
+import { deleteSasCaseAction } from "./delete";
 
 export async function deleteSasCaseFormAction(
 	_prevState: unknown,
 	formData: FormData,
 ): Promise<ActionResult<void>> {
-	const submission = parseWithZod(formData, { schema: deleteSasCaseSchema })
+	const submission = parseWithZod(formData, { schema: deleteSasCaseSchema });
 
 	if (submission.status !== "success") {
-		return { result: submission.reply() }
+		return { result: submission.reply() };
 	}
 
 	try {
-		await deleteSasCaseAction(submission.value.id)
+		await deleteSasCaseAction(submission.value.id);
 		return {
 			result: submission.reply({ resetForm: false }),
-		}
+		};
 	} catch (error) {
 		return {
 			result: {
@@ -28,6 +28,6 @@ export async function deleteSasCaseFormAction(
 					"": [error instanceof Error ? error.message : "エラーが発生しました"],
 				},
 			},
-		}
+		};
 	}
 }
