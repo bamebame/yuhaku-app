@@ -11,11 +11,12 @@ import {
 	PosInput
 } from "@/components/pos";
 import { CreditCard, Banknote, Smartphone, Gift } from "lucide-react";
+import type { Summary } from "@/features/sas_cases/types";
 
 interface CheckoutDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	total: number;
+	summary: Summary;
 	onConfirm: (payments: PaymentData[]) => void;
 }
 
@@ -37,9 +38,10 @@ const paymentMethods = [
 export function CheckoutDialog({
 	open,
 	onOpenChange,
-	total,
+	summary,
 	onConfirm,
 }: CheckoutDialogProps) {
+	const total = summary.total;
 	const [payments, setPayments] = useState<PaymentData[]>([
 		{ paymentId: "1", paymentName: "現金", amount: total, method: "cash" },
 	]);
@@ -101,9 +103,36 @@ export function CheckoutDialog({
 				</PosDialogHeader>
 
 				<div className="space-y-4">
-					{/* 合計金額 */}
-					<div className="bg-pos-light p-4 border-2 border-pos-border">
-						<div className="flex justify-between items-center text-pos-xl font-bold">
+					{/* 金額内訳 */}
+					<div className="bg-pos-light p-4 border-2 border-pos-border space-y-2">
+						<div className="flex justify-between text-pos-base">
+							<span>小計</span>
+							<span>¥{summary.subTotal.toLocaleString()}</span>
+						</div>
+						{summary.caseAdjustment !== 0 && (
+							<div className="flex justify-between text-pos-base">
+								<span>ケース調整</span>
+								<span>{summary.caseAdjustment > 0 ? '+' : ''}¥{summary.caseAdjustment.toLocaleString()}</span>
+							</div>
+						)}
+						{summary.couponAdjustment !== 0 && (
+							<div className="flex justify-between text-pos-base">
+								<span>クーポン割引</span>
+								<span>¥{summary.couponAdjustment.toLocaleString()}</span>
+							</div>
+						)}
+						<div className="border-t border-pos-border pt-2 space-y-1">
+							{summary.taxes.map((tax, index) => {
+								const taxLabel = tax.taxRateType === 'GENERAL' ? '10%' : tax.taxRateType === 'RELIEF' ? '8%' : '非課税';
+								return (
+									<div key={index} className="flex justify-between text-pos-sm text-pos-muted">
+										<span>消費税({taxLabel})</span>
+										<span>¥{tax.tax.toLocaleString()}</span>
+									</div>
+								);
+							})}
+						</div>
+						<div className="border-t border-pos-border pt-2 flex justify-between items-center text-pos-xl font-bold">
 							<span>合計金額</span>
 							<span>¥{total.toLocaleString()}</span>
 						</div>

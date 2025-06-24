@@ -45,8 +45,9 @@ export function CartPanel() {
 	// 表示用のアイテム（削除済みを除く）
 	const visibleItems = cartItems.filter((item) => item.action !== "DELETE");
 
-	// 合計計算
-	const subtotal = visibleItems.reduce(
+	// summaryからの値を使用（存在しない場合は手動計算）
+	const summary = originalCase?.summary;
+	const subtotal = summary?.subTotal || visibleItems.reduce(
 		(sum, item) => sum + item.unitPrice * item.quantity,
 		0,
 	);
@@ -54,9 +55,9 @@ export function CartPanel() {
 		(sum, item) => sum + item.unitAdjustment * item.quantity,
 		0,
 	);
-	const caseAdjustment = originalCase?.summary?.caseAdjustment || 0;
-	const couponAdjustment = originalCase?.summary?.couponAdjustment || 0;
-	const total = subtotal + adjustmentTotal + caseAdjustment + couponAdjustment;
+	const caseAdjustment = summary?.caseAdjustment || 0;
+	const couponAdjustment = summary?.couponAdjustment || 0;
+	const total = summary?.total || (subtotal + adjustmentTotal + caseAdjustment + couponAdjustment);
 
 	const handleCaseAdjustmentSave = () => {
 		const adjustment = parseInt(caseAdjustmentInput) || 0;
@@ -155,7 +156,8 @@ export function CartPanel() {
 		}));
 
 		// サマリー情報
-		const subtotal = visibleItems.reduce(
+		const apiSummary = originalCase?.summary;
+		const subtotal = apiSummary?.subTotal || visibleItems.reduce(
 			(sum, item) => sum + item.unitPrice * item.quantity,
 			0,
 		);
@@ -163,17 +165,34 @@ export function CartPanel() {
 			(sum, item) => sum + item.unitAdjustment * item.quantity,
 			0,
 		);
-		const caseAdjustment = originalCase?.summary?.caseAdjustment || 0;
-		const couponDiscount = originalCase?.summary?.couponAdjustment || 0;
-		const total = subtotal + adjustmentTotal + caseAdjustment + couponDiscount;
+		const caseAdjustment = apiSummary?.caseAdjustment || 0;
+		const couponDiscount = apiSummary?.couponAdjustment || 0;
+		const total = apiSummary?.total || (subtotal + adjustmentTotal + caseAdjustment + couponDiscount);
+
+		// APIからの税額情報を使用（ない場合はデフォルト計算）
+		let totalTax = 0;
+		let mainTaxRate = 10;
+		if (apiSummary?.taxes && apiSummary.taxes.length > 0) {
+			totalTax = apiSummary.taxes.reduce((sum, tax) => sum + tax.tax, 0);
+			// 最も多い税率をメインとして表示
+			const generalTax = apiSummary.taxes.find(t => t.taxRateType === 'GENERAL');
+			if (generalTax) mainTaxRate = 10;
+			else {
+				const reliefTax = apiSummary.taxes.find(t => t.taxRateType === 'RELIEF');
+				if (reliefTax) mainTaxRate = 8;
+			}
+		} else {
+			// デフォルトでは10%で計算
+			totalTax = Math.floor(total * 0.1 / 1.1);
+		}
 
 		const summary: ReceiptSummary = {
 			subtotal,
 			caseAdjustment,
 			couponDiscount,
 			total,
-			tax: Math.floor(total * 0.1 / 1.1), // 税込み価格から税額を逆算
-			taxRate: 10,
+			tax: totalTax,
+			taxRate: mainTaxRate,
 		};
 
 		// 支払い情報
@@ -303,6 +322,31 @@ export function CartPanel() {
 						)}
 					</div>
 
+					{couponAdjustment !== 0 && (
+						<div className="flex justify-between text-sm">
+							<span>クーポン割引</span>
+							<span className="text-red-600">¥{couponAdjustment.toLocaleString()}</span>
+						</div>
+					)}
+
+					{/* 税額表示 */}
+					{summary?.taxes && summary.taxes.length > 0 && (
+						<>
+							<Separator className="border-pos-border" />
+							<div className="space-y-1">
+								{summary.taxes.map((tax, index) => {
+									const taxLabel = tax.taxRateType === 'GENERAL' ? '10%' : tax.taxRateType === 'RELIEF' ? '8%' : '非課税';
+									return (
+										<div key={index} className="flex justify-between text-xs text-pos-muted">
+											<span>（内消費税{taxLabel}）</span>
+											<span>¥{tax.tax.toLocaleString()}</span>
+										</div>
+									);
+								})}
+							</div>
+						</>
+					)}
+
 					<Separator className="border-pos-border" />
 
 					<div className="flex justify-between font-bold text-pos-lg">
@@ -324,12 +368,14 @@ export function CartPanel() {
 			</div>
 
 			{/* チェックアウトダイアログ */}
-			<CheckoutDialog
-				open={showCheckoutDialog}
-				onOpenChange={setShowCheckoutDialog}
-				total={total}
-				onConfirm={handleCheckout}
-			/>
+			{summary && (
+				<CheckoutDialog
+					open={showCheckoutDialog}
+					onOpenChange={setShowCheckoutDialog}
+					summary={summary}
+					onConfirm={handleCheckout}
+				/>
+			)}
 		</div>
 	);
 }

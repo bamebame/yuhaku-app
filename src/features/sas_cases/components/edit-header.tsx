@@ -137,13 +137,53 @@ export function SasCaseEditHeader() {
 		}
 	};
 
-	// 合計金額を計算
+	// 合計金額を計算（summaryがあればそれを使用）
 	const calculateTotal = () => {
+		if (originalCase?.summary?.total) {
+			return originalCase.summary.total;
+		}
 		return cartItems
 			.filter((item) => item.action !== "DELETE")
 			.reduce((sum, item) => {
 				return sum + (item.unitPrice + item.unitAdjustment) * item.quantity;
 			}, 0);
+	};
+
+	// summaryを作成（チェックアウトダイアログ用）
+	const createSummary = () => {
+		if (originalCase?.summary) {
+			return originalCase.summary;
+		}
+		// summaryがない場合は簡易的なsummaryを作成
+		const visibleItems = cartItems.filter((item) => item.action !== "DELETE");
+		const subtotal = visibleItems.reduce(
+			(sum, item) => sum + item.unitPrice * item.quantity,
+			0,
+		);
+		const adjustmentTotal = visibleItems.reduce(
+			(sum, item) => sum + item.unitAdjustment * item.quantity,
+			0,
+		);
+		const total = subtotal + adjustmentTotal;
+
+		return {
+			quantity: visibleItems.reduce((sum, item) => sum + item.quantity, 0),
+			reservedQuantity: 0,
+			subTotal: subtotal,
+			caseAdjustment: 0,
+			couponAdjustment: 0,
+			total,
+			taxes: [
+				{
+					taxRateType: "GENERAL" as const,
+					taxRate: 10,
+					tax: Math.floor(total * 0.1 / 1.1),
+					includedTax: Math.floor(total * 0.1 / 1.1),
+					taxableAmount: total,
+				},
+			],
+			exemptedTaxes: [],
+		};
 	};
 
 	return (
@@ -180,7 +220,7 @@ export function SasCaseEditHeader() {
 			<CheckoutDialog
 				open={showCheckoutDialog}
 				onOpenChange={setShowCheckoutDialog}
-				total={calculateTotal()}
+				summary={createSummary()}
 				onConfirm={handleCheckoutConfirm}
 			/>
 		</div>
