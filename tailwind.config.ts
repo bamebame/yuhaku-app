@@ -49,18 +49,29 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        // POSシステム用カスタムカラー
+        // POSシステム用カスタムカラー - 新カラースキーム
         pos: {
-          border: "#000000",
-          background: "#FFFFFF",
-          foreground: "#000000",
-          muted: "#666666",
-          accent: "#000000",
-          light: "#F5F5F5",
-          hover: "#F0F0F0",
+          border: "#1c1c1c", // 黒枠線
+          background: "#fafafa", // 薄いグレー背景
+          foreground: "#1c1c1c", // 黒文字
+          muted: "#666666", // グレー補助テキスト
+          accent: "#133b6b", // ディープブルーアクセント（アクティブ要素）
+          light: "#f5f5f5", // ライトグレー
+          hover: "#eeeeee", // ホバー時のグレー
+          primary: "#133b6b", // メインディープブルー（ボタン・アクティブ要素）
+          "primary-light": "#1d4ed8", // 明るいディープブルー
+          "primary-dark": "#0f2a4a", // 暗いディープブルー
         },
       },
       borderWidth: {

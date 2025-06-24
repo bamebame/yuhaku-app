@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 		const allProducts = await client.listAll({
 			status,
 			categoryIds,
-			limit: 100, // 1ページあたりの取得数
+			limit: 250, // 1ページあたりの取得数
 		});
 
 		// レスポンスにキャッシュヘッダーとバージョン情報を設定

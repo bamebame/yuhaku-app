@@ -13,7 +13,7 @@ const PosTabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center border-2 border-pos-border bg-pos-background p-0",
+      "inline-flex h-10 items-center justify-center border-b-2 border-t-0 border-l-0 border-r-0 border-pos-border bg-pos-background p-0",
       className
     )}
     {...props}
@@ -32,7 +32,7 @@ const PosTabsTrigger = React.forwardRef<
       "text-pos-base font-medium ring-offset-background transition-all",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       "focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-      "data-[state=active]:bg-pos-foreground data-[state=active]:text-pos-background",
+      "data-[state=active]:bg-pos-primary data-[state=active]:text-white data-[state=active]:border-pos-primary",
       "data-[state=inactive]:hover:bg-pos-hover",
       "border-r-2 border-pos-border last:border-r-0",
       className

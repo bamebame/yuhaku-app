@@ -217,7 +217,7 @@ export function SasCaseDetail({ id }: SasCaseDetailProps) {
 										</TableCell>
 										<TableCell className="text-right">
 											{item.unitAdjustment !== 0 && (
-												<span className="text-red-600">
+												<span className="text-destructive">
 													¥{item.unitAdjustment.toLocaleString()}
 												</span>
 											)}
@@ -257,7 +257,7 @@ export function SasCaseDetail({ id }: SasCaseDetailProps) {
 						{sasCase.summary?.caseAdjustment !== 0 && (
 							<div className="flex justify-between">
 								<dt className="text-sm">ケース調整</dt>
-								<dd className="text-sm text-red-600">
+								<dd className="text-sm text-destructive">
 									¥{sasCase.summary?.caseAdjustment.toLocaleString()}
 								</dd>
 							</div>
@@ -265,7 +265,7 @@ export function SasCaseDetail({ id }: SasCaseDetailProps) {
 						{sasCase.summary?.couponAdjustment !== 0 && (
 							<div className="flex justify-between">
 								<dt className="text-sm">クーポン調整</dt>
-								<dd className="text-sm text-red-600">
+								<dd className="text-sm text-destructive">
 									¥{sasCase.summary?.couponAdjustment.toLocaleString()}
 								</dd>
 							</div>
@@ -291,7 +291,7 @@ export function SasCaseDetail({ id }: SasCaseDetailProps) {
 							{sasCase.coupons.map((coupon, index) => (
 								<li key={index} className="flex justify-between">
 									<span className="text-sm">クーポンID: {coupon.couponId}</span>
-									<span className="text-sm text-red-600">
+									<span className="text-sm text-destructive">
 										¥{coupon.amount.toLocaleString()}
 									</span>
 								</li>

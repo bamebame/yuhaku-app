@@ -8,7 +8,7 @@ const posBadgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-pos-border bg-pos-foreground text-pos-background",
+          "border-pos-primary bg-pos-primary text-white",
         secondary:
           "border-pos-border bg-pos-background text-pos-foreground",
         destructive:

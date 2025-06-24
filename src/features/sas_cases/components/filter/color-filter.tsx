@@ -78,7 +78,7 @@ export function ColorFilter() {
 					"relative p-2 border-2 border-pos-border transition-all",
 					"hover:shadow-md group",
 					isSelected
-						? "bg-pos-foreground"
+						? "bg-pos-primary"
 						: "bg-white hover:bg-pos-hover"
 				)}
 			>

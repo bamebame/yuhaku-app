@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 		// 商品を取得（少ない数から試す）
 		let products;
 		try {
-			products = await productsClient.list({ limit: 100 });
+			products = await productsClient.list({ limit: 250 });
 		} catch (error) {
 			console.error("[ProductAttributes] Failed to fetch products:", error);
 			// エラーが発生した場合は空の配列を返す

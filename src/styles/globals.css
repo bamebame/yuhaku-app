@@ -4,48 +4,56 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --background: 0 0% 98%; /* Light gray #fafafa */
+    --foreground: 0 0% 11%; /* Black #1c1c1c */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 11%; /* Black #1c1c1c */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-    --primary: 0 0% 0%;
+    --popover-foreground: 0 0% 11%; /* Black #1c1c1c */
+    --primary: 219 69% 25%; /* Deep Blue #133b6b */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 0 0% 96%; /* Very light gray */
+    --secondary-foreground: 0 0% 11%; /* Black #1c1c1c */
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 40%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 0%;
-    --input: 0 0% 0%;
-    --ring: 0 0% 0%;
+    --accent: 219 69% 25%; /* Deep Blue #133b6b for active elements */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 65%; /* Coral Pink #FF6B6B */
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 75% 36%; /* Forest Green #059669 */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%; /* Amber #F59E0B */
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 11%; /* Black #1c1c1c */
+    --input: 0 0% 11%; /* Black #1c1c1c */
+    --ring: 219 69% 25%; /* Deep blue for focus states */
     --radius: 0rem;
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --background: 0 0% 11%; /* Dark background */
+    --foreground: 0 0% 98%;
+    --card: 0 0% 14.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 14.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 219 69% 45%; /* Lighter deep blue for dark mode */
+    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 20%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 219 69% 45%; /* Lighter deep blue accent */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 72% 65%; /* Coral Pink */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 100%;
-    --input: 0 0% 100%;
-    --ring: 0 0% 100%;
+    --success: 160 75% 45%; /* Lighter forest green */
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%; /* Amber */
+    --warning-foreground: 0 0% 98%;
+    --border: 0 0% 30%; /* Lighter border for dark mode */
+    --input: 0 0% 30%;
+    --ring: 219 69% 45%; /* Deep blue for focus states */
   }
 }
 

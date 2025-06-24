@@ -226,7 +226,7 @@ export function CompletedSummary({ sasCase, charges }: CompletedSummaryProps) {
 				{/* ヘッダー */}
 				<div className="flex items-center justify-between">
 					<h1 className="text-pos-xl font-bold flex items-center gap-3">
-						<CheckCircle className="h-8 w-8 text-green-600" />
+						<CheckCircle className="h-8 w-8 text-success" />
 						販売完了
 					</h1>
 					<div className="flex items-center gap-2">

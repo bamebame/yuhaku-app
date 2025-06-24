@@ -104,7 +104,7 @@ export function CartItem({ item }: CartItemProps) {
 								<>
 									{item.unitAdjustment !== 0 && (
 										<span
-											className={`${item.unitAdjustment < 0 ? "text-red-600" : ""}`}
+											className={`${item.unitAdjustment < 0 ? "text-destructive" : ""}`}
 										>
 											{item.unitAdjustment > 0 ? "+" : ""}
 											{item.unitAdjustment}

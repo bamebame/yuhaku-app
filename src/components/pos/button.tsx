@@ -8,7 +8,7 @@ const posButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-pos-foreground !text-white border-2 border-pos-border hover:bg-pos-muted hover:!text-white disabled:bg-pos-muted disabled:!text-white",
+        default: "bg-pos-primary !text-white border-2 border-pos-border hover:bg-pos-primary-dark hover:!text-white disabled:bg-pos-muted disabled:!text-white",
         secondary: "bg-pos-background text-black border-2 border-pos-border hover:bg-pos-hover disabled:bg-pos-light disabled:text-pos-muted",
         ghost: "hover:bg-pos-hover hover:text-black",
         destructive: "bg-destructive text-destructive-foreground border-2 border-destructive hover:bg-destructive/90",

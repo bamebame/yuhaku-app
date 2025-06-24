@@ -68,7 +68,7 @@ export function CategoryTabs() {
 							"border-2 border-pos-border",
 							"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 							selectedCategoryId === null
-								? "bg-pos-foreground text-white border-pos-foreground hover:bg-pos-muted hover:text-white"
+								? "bg-pos-primary text-white border-pos-primary hover:bg-pos-primary-dark hover:text-white"
 								: "bg-transparent hover:bg-pos-hover"
 						)}
 					>
@@ -86,7 +86,7 @@ export function CategoryTabs() {
 									"border-2 border-pos-border",
 									"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 									selectedCategoryId === category.id
-										? "bg-pos-foreground text-white border-pos-foreground hover:bg-pos-muted hover:text-white"
+										? "bg-pos-primary text-white border-pos-primary hover:bg-pos-primary-dark hover:text-white"
 										: "bg-transparent hover:bg-pos-hover"
 								)}
 							>

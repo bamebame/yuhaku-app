@@ -58,9 +58,9 @@ export function PrinterSettingsDialog({ printer, trigger }: PrinterSettingsDialo
   const connectionStatusColor = () => {
     switch (printer.connectionStatus) {
       case "connected":
-        return "text-green-600";
+        return "text-success";
       case "error":
-        return "text-red-600";
+        return "text-destructive";
       default:
         return "text-pos-muted";
     }
@@ -111,7 +111,7 @@ export function PrinterSettingsDialog({ printer, trigger }: PrinterSettingsDialo
             )}
 
             {printer.lastError && (
-              <div className="mt-3 text-sm text-red-600">
+              <div className="mt-3 text-sm text-destructive">
                 エラー: {printer.lastError.message}
               </div>
             )}

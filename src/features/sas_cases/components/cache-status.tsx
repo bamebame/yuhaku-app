@@ -24,13 +24,13 @@ export function CacheStatus() {
 				</div>
 				
 				{cacheState.updateAvailable && (
-					<div className="text-orange-600 font-semibold">
+					<div className="text-warning font-semibold">
 						新しいデータが利用可能です
 					</div>
 				)}
 				
 				{cacheState.error && (
-					<div className="text-red-600">
+					<div className="text-destructive">
 						エラー: {cacheState.error.message}
 					</div>
 				)}

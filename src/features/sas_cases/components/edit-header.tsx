@@ -208,12 +208,12 @@ export function SasCaseEditHeader() {
 						</>
 					) : error ? (
 						<>
-							<AlertCircle className="h-4 w-4 text-red-600" />
-							<span className="text-red-600">保存エラー</span>
+							<AlertCircle className="h-4 w-4 text-destructive" />
+							<span className="text-destructive">保存エラー</span>
 						</>
 					) : lastSaved ? (
 						<>
-							<Check className="h-4 w-4 text-green-600" />
+							<Check className="h-4 w-4 text-success" />
 							<span className="text-pos-muted">
 								保存済み ({new Date(lastSaved).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })})
 							</span>

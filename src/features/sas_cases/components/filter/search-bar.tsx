@@ -111,7 +111,7 @@ export function SearchBar() {
 						className={cn(
 							"flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all",
 							"border-2 border-pos-border rounded",
-							showInStockOnly ? "bg-pos-foreground text-white" : "bg-white hover:bg-pos-hover"
+							showInStockOnly ? "bg-pos-primary text-white" : "bg-white hover:bg-pos-hover"
 						)}
 					>
 						<div 

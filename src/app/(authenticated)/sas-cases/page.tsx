@@ -60,7 +60,7 @@ export default function SasCasesPage() {
 			{/* 進行中の販売ケース */}
 			<div className="bg-pos-background border-2 border-pos-border rounded-lg p-4">
 				<h2 className="text-xl font-bold mb-4 flex items-center">
-					<span className="bg-pos-foreground text-white px-3 py-1 rounded-sm mr-2 text-sm">
+					<span className="bg-pos-primary text-white px-3 py-1 rounded-sm mr-2 text-sm">
 						進行中
 					</span>
 					販売ケース一覧

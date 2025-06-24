@@ -63,7 +63,7 @@ export function ProductGrid({ products }: ProductGridProps) {
 				<div className="flex items-center gap-3 text-sm">
 					<span>検索結果: <span className="font-bold">{products.length}</span>件</span>
 					{showInStockOnly && (
-						<span className="flex items-center gap-1 px-2 py-1 bg-pos-foreground text-white rounded text-xs">
+						<span className="flex items-center gap-1 px-2 py-1 bg-pos-primary text-white rounded text-xs">
 							<Package className="h-3 w-3" />
 							在庫ありのみ
 						</span>
@@ -78,7 +78,7 @@ export function ProductGrid({ products }: ProductGridProps) {
 							className={cn(
 								"p-2 transition-colors",
 								viewMode === 'grid'
-									? "bg-pos-foreground text-white"
+									? "bg-pos-primary text-white"
 									: "hover:bg-pos-hover"
 							)}
 							title="タイル表示"
@@ -90,7 +90,7 @@ export function ProductGrid({ products }: ProductGridProps) {
 							className={cn(
 								"p-2 transition-colors",
 								viewMode === 'list'
-									? "bg-pos-foreground text-white"
+									? "bg-pos-primary text-white"
 									: "hover:bg-pos-hover"
 							)}
 							title="リスト表示"

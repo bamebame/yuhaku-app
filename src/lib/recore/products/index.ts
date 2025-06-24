@@ -36,7 +36,7 @@ export class ProductsClient extends BaseClient {
 	async listAll(params: Omit<ProductSearchParams, 'page' | 'cursor'> = {}): Promise<Product[]> {
 		const allProducts: Product[] = [];
 		let cursor = '';
-		const limit = params.limit || 100;
+		const limit = params.limit || 250;
 
 		while (true) {
 			const recoreParams = convertProductSearchParamsToRecore({

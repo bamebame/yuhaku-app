@@ -202,7 +202,7 @@ export function CheckoutDialog({
 						{remaining > 0 && (
 							<div className="flex justify-between text-pos-base">
 								<span>残金</span>
-								<span className="text-red-600 font-bold">
+								<span className="text-destructive font-bold">
 									¥{remaining.toLocaleString()}
 								</span>
 							</div>

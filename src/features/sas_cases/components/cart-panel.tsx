@@ -307,7 +307,7 @@ export function CartPanel() {
 							</div>
 						) : (
 							<div className="flex items-center gap-1">
-								<span className={caseAdjustment < 0 ? "text-red-600" : ""}>
+								<span className={caseAdjustment < 0 ? "text-destructive" : ""}>
 									¥{caseAdjustment.toLocaleString()}
 								</span>
 								<PosButton
@@ -328,7 +328,7 @@ export function CartPanel() {
 					{couponAdjustment !== 0 && (
 						<div className="flex justify-between text-sm">
 							<span>クーポン割引</span>
-							<span className="text-red-600">¥{couponAdjustment.toLocaleString()}</span>
+							<span className="text-destructive">¥{couponAdjustment.toLocaleString()}</span>
 						</div>
 					)}
 
