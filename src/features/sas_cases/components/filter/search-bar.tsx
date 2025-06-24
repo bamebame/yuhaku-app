@@ -111,7 +111,7 @@ export function SearchBar() {
 						className={cn(
 							"flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all",
 							"border-2 border-pos-border rounded",
-							showInStockOnly ? "bg-pos-foreground text-white" : "bg-white hover:bg-pos-hover"
+							showInStockOnly ? "bg-pos-primary text-white border-pos-primary" : "bg-white hover:bg-pos-hover"
 						)}
 					>
 						<div 
@@ -122,7 +122,7 @@ export function SearchBar() {
 						>
 							{showInStockOnly && (
 								<svg
-									className="w-3 h-3 text-pos-foreground"
+									className="w-3 h-3 text-pos-primary"
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"

@@ -78,13 +78,13 @@ export function ColorFilter() {
 					"relative p-2 border-2 border-pos-border transition-all",
 					"hover:shadow-md group",
 					isSelected
-						? "bg-pos-foreground"
+						? "bg-pos-primary border-pos-primary"
 						: "bg-white hover:bg-pos-hover"
 				)}
 			>
 				{isSelected && (
 					<div className="absolute top-1 right-1 bg-white rounded-full p-0.5">
-						<Check className="h-3 w-3 text-pos-foreground" />
+						<Check className="h-3 w-3 text-pos-primary" />
 					</div>
 				)}
 				<div className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-pos-border" 

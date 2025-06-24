@@ -73,7 +73,7 @@ export function SeriesFilter() {
 					"relative p-4 border-2 border-pos-border transition-all",
 					"hover:shadow-md",
 					isSelected
-						? "bg-pos-foreground text-white"
+						? "bg-pos-primary text-white border-pos-primary"
 						: "bg-white hover:bg-pos-hover"
 				)}
 			>

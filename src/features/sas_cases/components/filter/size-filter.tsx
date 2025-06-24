@@ -99,7 +99,7 @@ export function SizeFilter() {
 									"relative p-2 text-sm font-medium border-2 border-pos-border transition-all",
 									"hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed",
 									isSelected
-										? "bg-pos-foreground text-white"
+										? "bg-pos-primary text-white border-pos-primary"
 										: "bg-white hover:bg-pos-hover disabled:hover:bg-white"
 								)}
 							>

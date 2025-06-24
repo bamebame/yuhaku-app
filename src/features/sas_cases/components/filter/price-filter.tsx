@@ -95,7 +95,7 @@ export function PriceFilter() {
 								className={cn(
 									"flex items-center gap-3 p-3 border-2 border-pos-border cursor-pointer transition-colors",
 									"hover:bg-pos-hover",
-									isSelected && "bg-pos-foreground text-white"
+									isSelected && "bg-pos-primary text-white border-pos-primary"
 								)}
 							>
 								<input
@@ -148,7 +148,7 @@ export function PriceFilter() {
 						className={cn(
 							"flex-1 px-3 py-2 border-2 border-pos-border font-medium transition-colors",
 							customMin || customMax
-								? "bg-pos-foreground text-white hover:bg-pos-muted"
+								? "bg-pos-primary text-white hover:bg-pos-primary-dark border-pos-primary"
 								: "bg-gray-100 text-gray-400 cursor-not-allowed"
 						)}
 					>

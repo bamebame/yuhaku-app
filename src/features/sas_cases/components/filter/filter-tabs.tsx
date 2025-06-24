@@ -49,7 +49,7 @@ export function FilterTabs() {
 							"px-4 py-2 font-medium transition-colors",
 							"border-2 border-pos-border",
 							activeTab === tab.id
-								? "bg-pos-foreground text-white"
+								? "bg-pos-primary text-white border-pos-primary"
 								: "bg-white text-pos-foreground hover:bg-pos-hover"
 						)}
 					>
