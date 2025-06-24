@@ -7,11 +7,13 @@ import { SasCaseEditHeader } from "./edit-header";
 import { ProductSelectionPanel } from "./product-selection-panel";
 import { CartPanel } from "./cart-panel";
 import { CustomerInfoPanel } from "./customer-info-panel";
+import { CompletedSummary } from "./completed-summary";
 import { useToast } from "@/hooks/use-toast";
 import { PosTabs, PosTabsContent, PosTabsList, PosTabsTrigger } from "@/components/pos";
 import { PosTwoColumnLayout } from "@/components/pos/layout";
 import { ShoppingCart, User } from "lucide-react";
 import type { SasCase } from "@/features/sas_cases/types";
+import type { CheckoutInfo } from "@/lib/recore/sas_cases/checkout";
 
 interface SasCaseEditContainerProps {
 	caseId: string;
@@ -35,6 +37,7 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 	const initialize = useSasCaseEditStore((state) => state.initialize);
 	const reset = useSasCaseEditStore((state) => state.reset);
 	const [activeTab, setActiveTab] = useState("cart");
+	const [checkoutInfo, setCheckoutInfo] = useState<CheckoutInfo | null>(null);
 
 	const sasCase = response?.data;
 
@@ -67,6 +70,24 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 			});
 		}
 	}, [error, toast]);
+	
+	// 販売完了時のチェックアウト情報を取得
+	useEffect(() => {
+		if (sasCase && sasCase.status !== "IN_PROGRESS") {
+			const fetchCheckoutInfo = async () => {
+				try {
+					const response = await fetch(`/api/sas-cases/${caseId}/checkout`);
+					if (response.ok) {
+						const data = await response.json();
+						setCheckoutInfo(data.data);
+					}
+				} catch (error) {
+					console.error("Failed to fetch checkout info:", error);
+				}
+			};
+			fetchCheckoutInfo();
+		}
+	}, [sasCase, caseId]);
 
 	if (isLoading) {
 		return null; // Skeletonはpage.tsxで表示
@@ -81,13 +102,7 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 	}
 
 	if (sasCase.status !== "IN_PROGRESS") {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<p className="text-muted-foreground">
-					完了済みの販売ケースは編集できません
-				</p>
-			</div>
-		);
+		return <CompletedSummary sasCase={sasCase} charges={checkoutInfo?.charges} />;
 	}
 
 	return (

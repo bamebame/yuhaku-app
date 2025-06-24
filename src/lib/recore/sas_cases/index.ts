@@ -5,7 +5,7 @@ import {
 	convertSasCaseSearchParamsToRecore,
 	convertSasCaseUpdateInputToRecore,
 } from "@/features/sas_cases/recore/convert";
-import type { RecoreSasCase } from "@/features/sas_cases/recore/types";
+import type { RecoreSasCase, RecoreCheckoutInfo } from "@/features/sas_cases/recore/types";
 import type {
 	CheckoutInput,
 	SasCase,
@@ -14,6 +14,8 @@ import type {
 	SasCaseUpdateInput,
 } from "@/features/sas_cases/types";
 import { BaseClient } from "../baseClient";
+import type { CheckoutInfo } from "./checkout";
+import { convertRecoreCheckoutInfoToCheckoutInfo } from "./checkout";
 
 /**
  * 店頭販売ケースAPIクライアント
@@ -36,7 +38,21 @@ export class SasCasesClient extends BaseClient {
 	 */
 	async getById(id: string): Promise<SasCase> {
 		const response = await this.get<RecoreSasCase>(`/sas_cases/${id}`);
-		return convertRecoreSasCaseToSasCase(response);
+		
+		// デバッグ: APIレスポンスの確認
+		if (process.env.DEBUG_API === "true") {
+			console.log("[SasCasesClient.getById] Raw API Response:", JSON.stringify(response, null, 2));
+			console.log("[SasCasesClient.getById] Summary taxes:", response.summary?.taxes);
+		}
+		
+		const result = convertRecoreSasCaseToSasCase(response);
+		
+		// デバッグ: 変換後のデータ確認
+		if (process.env.DEBUG_API === "true") {
+			console.log("[SasCasesClient.getById] Converted summary taxes:", result.summary?.taxes);
+		}
+		
+		return result;
 	}
 
 	/**
@@ -86,5 +102,13 @@ export class SasCasesClient extends BaseClient {
 	async checkout(id: string, input: CheckoutInput): Promise<void> {
 		const recoreInput = convertCheckoutInputToRecore(input);
 		await this.put(`/sas_cases/${id}/checkout`, recoreInput);
+	}
+	
+	/**
+	 * チェックアウト情報を取得
+	 */
+	async getCheckoutInfo(id: string): Promise<CheckoutInfo> {
+		const response = await this.get<RecoreCheckoutInfo>(`/sas_cases/${id}/checkout`);
+		return convertRecoreCheckoutInfoToCheckoutInfo(response);
 	}
 }

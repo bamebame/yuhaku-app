@@ -90,6 +90,15 @@ export async function GET(
 
 		// データ取得
 		const result = await client.getById(id);
+		
+		// デバッグ: APIレスポンスの税額データを確認
+		if (process.env.DEBUG_API === "true") {
+			console.log("[GET /api/sas-cases/[id]] Summary:", {
+				total: result.summary?.total,
+				taxes: result.summary?.taxes,
+				taxesLength: result.summary?.taxes?.length || 0,
+			});
+		}
 
 		return apiResponse.success(result);
 	} catch (error) {

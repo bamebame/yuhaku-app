@@ -3,6 +3,9 @@ import type { SasCase, Goods, GoodsInput, GoodsUpdateInput } from "@/features/sa
 import type { Product } from "@/features/products/types";
 import type { Category } from "@/features/categories/types";
 import type { Item, ItemStock } from "@/features/items/types";
+import { updateSasCaseFormAction } from "@/features/sas_cases/actions";
+import { mutate } from "swr";
+import { fetchMissingProductsForCase } from "@/features/sas_cases/helpers/fetch-missing-products";
 
 export interface CartItem {
 	id: string; // 一時ID
@@ -40,6 +43,8 @@ interface SasCaseEditStore {
 	isLoading: boolean;
 	isSaving: boolean;
 	error: string | null;
+	lastSaved: Date | null;
+	saveTimeoutId: NodeJS.Timeout | null;
 
 	// 初期化
 	initialize: (caseId: string, sasCase: SasCase) => void;
@@ -81,6 +86,10 @@ interface SasCaseEditStore {
 		caseAdjustment?: number;
 		couponIds?: string[];
 	};
+	
+	// 自動保存
+	triggerAutoSave: () => void;
+	cancelAutoSave: () => void;
 }
 
 export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
@@ -98,6 +107,8 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 	isLoading: false,
 	isSaving: false,
 	error: null,
+	lastSaved: null,
+	saveTimeoutId: null,
 
 	// 初期化
 	initialize: (caseId, sasCase) => {
@@ -273,6 +284,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		};
 
 		set({ cartItems: [...cartItems, newItem], error: null });
+		get().triggerAutoSave();
 	},
 
 	updateQuantity: (itemId, quantity) => {
@@ -293,6 +305,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		);
 
 		set({ cartItems: updatedItems });
+		get().triggerAutoSave();
 	},
 
 	removeFromCart: (itemId) => {
@@ -309,6 +322,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			// 新規の場合は削除
 			set({ cartItems: cartItems.filter((i) => i.id !== itemId) });
 		}
+		get().triggerAutoSave();
 	},
 
 	clearCart: () => {
@@ -326,6 +340,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			return item;
 		});
 		set({ cartItems: updatedItems });
+		get().triggerAutoSave();
 	},
 
 	updateCaseAdjustment: (adjustment) => {
@@ -340,13 +355,23 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 					},
 				},
 			});
+			get().triggerAutoSave();
 		}
 	},
 
 	// 顧客情報更新
-	updateMemberId: (memberId) => set({ memberId }),
-	updateNote: (note) => set({ note }),
-	updateCustomerNote: (customerNote) => set({ customerNote }),
+	updateMemberId: (memberId) => {
+		set({ memberId });
+		get().triggerAutoSave();
+	},
+	updateNote: (note) => {
+		set({ note });
+		get().triggerAutoSave();
+	},
+	updateCustomerNote: (customerNote) => {
+		set({ customerNote });
+		get().triggerAutoSave();
+	},
 
 	// 保存・完了
 	setSaving: (isSaving) => set({ isSaving }),
@@ -400,5 +425,83 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			caseAdjustment: originalCase?.summary?.caseAdjustment,
 			couponIds: originalCase?.coupons?.map(c => c.couponId),
 		};
+	},
+	
+	// 自動保存
+	triggerAutoSave: () => {
+		const state = get();
+		
+		// 既存のタイマーをクリア
+		if (state.saveTimeoutId) {
+			clearTimeout(state.saveTimeoutId);
+		}
+		
+		// 2秒後に保存を実行
+		const timeoutId = setTimeout(async () => {
+			const { caseId, getUpdateData, setSaving } = get();
+			if (!caseId) return;
+			
+			setSaving(true);
+			try {
+				const updateData = getUpdateData();
+				const formData = new FormData();
+				
+				// goodsを個別にFormDataに追加
+				updateData.goods.forEach((item, index) => {
+					formData.append(`goods[${index}][action]`, item.action);
+					if (item.id) formData.append(`goods[${index}][id]`, item.id);
+					if (item.itemId) formData.append(`goods[${index}][itemId]`, item.itemId);
+					if (item.locationId) formData.append(`goods[${index}][locationId]`, item.locationId);
+					formData.append(`goods[${index}][quantity]`, item.quantity.toString());
+					formData.append(`goods[${index}][unitPrice]`, (item.unitPrice || 0).toString());
+					formData.append(`goods[${index}][unitAdjustment]`, (item.unitAdjustment || 0).toString());
+				});
+				
+				// その他のフィールドも追加
+				if (updateData.memberId !== undefined) {
+					formData.append("memberId", updateData.memberId || "");
+				}
+				if (updateData.note !== undefined) {
+					formData.append("note", updateData.note || "");
+				}
+				if (updateData.customerNote !== undefined) {
+					formData.append("customerNote", updateData.customerNote || "");
+				}
+				if (updateData.caseAdjustment !== undefined) {
+					formData.append("caseAdjustment", updateData.caseAdjustment.toString());
+				}
+				
+				const result = await updateSasCaseFormAction(caseId, null, formData);
+				
+				if (result.data) {
+					// 商品情報が不足している場合は補完
+					const updatedCase = await fetchMissingProductsForCase(result.data);
+					
+					// SWRキャッシュを更新
+					await mutate(`/api/sas-cases/${caseId}`, async () => {
+						return { data: updatedCase };
+					}, false);
+					
+					set({ lastSaved: new Date(), saveTimeoutId: null });
+				} else {
+					throw new Error("更新に失敗しました");
+				}
+			} catch (error) {
+				console.error("Auto save error:", error);
+				set({ error: "自動保存に失敗しました" });
+			} finally {
+				setSaving(false);
+			}
+		}, 2000); // 2秒のdebounce
+		
+		set({ saveTimeoutId: timeoutId });
+	},
+	
+	cancelAutoSave: () => {
+		const { saveTimeoutId } = get();
+		if (saveTimeoutId) {
+			clearTimeout(saveTimeoutId);
+			set({ saveTimeoutId: null });
+		}
 	},
 }));

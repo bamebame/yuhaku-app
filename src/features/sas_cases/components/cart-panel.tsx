@@ -3,6 +3,7 @@
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { CartItem } from "./cart-item";
 import { CheckoutDialog, type PaymentData } from "./checkout-dialog";
+import { CheckoutCompleteDialog } from "./checkout-complete-dialog";
 import { ShoppingCart, Edit2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PosButton, PosInput } from "@/components/pos";
@@ -28,6 +29,8 @@ export function CartPanel() {
 	const [isEditingCaseAdjustment, setIsEditingCaseAdjustment] = useState(false);
 	const [caseAdjustmentInput, setCaseAdjustmentInput] = useState("0");
 	const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+	const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+	const [checkoutResult, setCheckoutResult] = useState<{ total: number; paid: number; change: number } | null>(null);
 
 	// レシートプリンター
 	const receiptPrinter = useReceiptPrinter({
@@ -93,10 +96,13 @@ export function CartPanel() {
 					variant: "destructive",
 				});
 			} else if (result.data) {
-				toast({
-					title: "成功",
-					description: "販売が完了しました",
-				});
+				// おつりを計算
+				const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+				const change = totalPaid - total;
+				
+				// 決済完了ダイアログを表示
+				setCheckoutResult({ total, paid: totalPaid, change });
+				setShowCompleteDialog(true);
 				
 				// レシート印刷処理
 				if (receiptPrinter.isConnected) {
@@ -111,9 +117,6 @@ export function CartPanel() {
 						});
 					}
 				}
-				
-				// 一覧画面に戻る
-				router.push("/sas-cases");
 			}
 		} catch (error) {
 			toast({
@@ -374,6 +377,22 @@ export function CartPanel() {
 					onOpenChange={setShowCheckoutDialog}
 					summary={summary}
 					onConfirm={handleCheckout}
+				/>
+			)}
+			
+			{/* 決済完了ダイアログ */}
+			{checkoutResult && (
+				<CheckoutCompleteDialog
+					open={showCompleteDialog}
+					onOpenChange={setShowCompleteDialog}
+					total={checkoutResult.total}
+					paid={checkoutResult.paid}
+					change={checkoutResult.change}
+					onClose={() => {
+						setShowCompleteDialog(false);
+						// 一覧画面に戻る
+						router.push("/sas-cases");
+					}}
 				/>
 			)}
 		</div>

@@ -144,6 +144,19 @@ export interface RecoreChargeInput {
 	amount: number;
 }
 
+// チェックアウト情報
+export interface RecoreCheckoutInfo {
+	charges: Array<{
+		payment: {
+			id: number;
+			name: string;
+			type: string;
+		};
+		amount: number;
+		change: number;
+	}>;
+}
+
 // 検索パラメータ
 export interface RecoreSasCaseSearchParams {
 	ids?: number[];

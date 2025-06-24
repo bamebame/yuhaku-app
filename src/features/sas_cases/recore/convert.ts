@@ -126,7 +126,13 @@ export function convertRecoreExemptedTaxToExemptedTax(
 
 // サマリーの変換
 export function convertRecoreSummaryToSummary(recore: RecoreSummary): Summary {
-	return {
+	// デバッグ: 変換前の税情報を確認
+	if (process.env.DEBUG_API === "true") {
+		console.log("[convertRecoreSummaryToSummary] Input taxes:", recore.taxes);
+		console.log("[convertRecoreSummaryToSummary] Tax array length:", recore.taxes?.length || 0);
+	}
+	
+	const result = {
 		quantity: recore.quantity,
 		reservedQuantity: recore.reserved_quantity,
 		subTotal: recore.sub_total,
@@ -138,6 +144,13 @@ export function convertRecoreSummaryToSummary(recore: RecoreSummary): Summary {
 			convertRecoreExemptedTaxToExemptedTax,
 		),
 	};
+	
+	// デバッグ: 変換後の税情報を確認
+	if (process.env.DEBUG_API === "true") {
+		console.log("[convertRecoreSummaryToSummary] Output taxes:", result.taxes);
+	}
+	
+	return result;
 }
 
 // 店頭販売ケースの変換
