@@ -6,13 +6,14 @@ import { convertRecoreMemberToMember } from "@/features/members/recore/convert";
 
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
+		const { id } = await params;
 		const context = await createServerContext();
 		const client = new MembersClient(context);
 		
-		const recoreMember = await client.getByStringId(params.id);
+		const recoreMember = await client.getByStringId(id);
 		const member = convertRecoreMemberToMember(recoreMember);
 		return apiResponse.success(member);
 	} catch (error) {
