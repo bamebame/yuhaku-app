@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
+import { useFilterStore } from "@/features/sas_cases/stores/filter-store";
 import { PosButton, PosCard } from "@/components/pos";
-import { Plus, Package } from "lucide-react";
+import { Plus, Package, Heart } from "lucide-react";
 import { StockSelectionDialog } from "./stock-selection-dialog";
 import type { Product } from "@/features/products/types";
 import type { ItemStock } from "@/features/items/types";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
 	product: Product;
@@ -16,6 +18,7 @@ export function ProductCard({ product }: ProductCardProps) {
 	const [isAdding, setIsAdding] = useState(false);
 	const [showStockDialog, setShowStockDialog] = useState(false);
 	const { productStocks, addToCart } = useSasCaseEditStore();
+	const { isFavorite, toggleFavorite } = useFilterStore();
 
 	// 在庫情報を取得
 	const stocks = productStocks.get(product.id) || [];
@@ -60,7 +63,25 @@ export function ProductCard({ product }: ProductCardProps) {
 	};
 
 	return (
-		<PosCard className="p-3 flex flex-col gap-2 hover:bg-pos-hover transition-colors cursor-pointer">
+		<PosCard className="relative p-3 flex flex-col gap-2 hover:bg-pos-hover transition-colors cursor-pointer">
+			{/* お気に入りボタン */}
+			<button
+				onClick={(e) => {
+					e.stopPropagation();
+					toggleFavorite(product.id);
+				}}
+				className={cn(
+					"absolute top-2 right-2 z-10 p-1.5 rounded-full transition-colors",
+					"bg-white/80 hover:bg-white border-2 border-pos-border",
+					isFavorite(product.id) && "bg-red-500 hover:bg-red-600 border-red-500"
+				)}
+			>
+				<Heart className={cn(
+					"h-4 w-4",
+					isFavorite(product.id) ? "fill-white text-white" : "text-pos-muted"
+				)} />
+			</button>
+			
 			{/* 商品画像 */}
 			<div className="aspect-square bg-pos-light border-2 border-pos-border flex items-center justify-center overflow-hidden">
 				{product.imageUrls && product.imageUrls.length > 0 ? (

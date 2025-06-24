@@ -38,13 +38,24 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 
 	const sasCase = response?.data;
 
-	// 初期化
+	// 初期化（初回のみ）
+	const [isInitialized, setIsInitialized] = useState(false);
+	
 	useEffect(() => {
-		if (sasCase) {
+		if (sasCase && !isInitialized) {
+			// 基本的な初期化を実行（商品情報の解決も含む）
 			initialize(caseId, sasCase);
+			setIsInitialized(true);
 		}
-		return () => reset();
-	}, [sasCase, caseId, initialize, reset]);
+	}, [sasCase, caseId, initialize, isInitialized]);
+	
+	// クリーンアップ
+	useEffect(() => {
+		return () => {
+			reset();
+			setIsInitialized(false);
+		};
+	}, [reset]);
 
 	// エラー処理
 	useEffect(() => {

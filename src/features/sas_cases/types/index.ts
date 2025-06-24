@@ -45,6 +45,9 @@ export interface Goods {
 	taxFreeType: "GENERAL" | "CONSUMPTION" | "INELIGIBLE";
 	quantity: number;
 	reservedQuantity: number;
+	// 商品情報（オプション）
+	productName?: string;
+	productCode?: string;
 }
 
 // 税情報

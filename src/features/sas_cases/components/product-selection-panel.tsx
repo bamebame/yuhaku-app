@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import useSWR from "swr";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
-import { CategoryTabs } from "./category-tabs";
+import { useFilterStore } from "@/features/sas_cases/stores/filter-store";
+import { SearchBar } from "./filter/search-bar";
+import { FilterTabs } from "./filter/filter-tabs";
+import { FilterContent } from "./filter/filter-content";
 import { ProductGrid } from "./product-grid";
+import { ProductCard } from "./product-card";
 import { useCachedProducts, useCachedCategories } from "@/lib/cache";
 import type { Category } from "@/features/categories/types";
 import type { Product } from "@/features/products/types";
@@ -24,8 +28,18 @@ export function ProductSelectionPanel() {
 	const prevProductsRef = useRef<string>("");
 	const prevItemsRef = useRef<string>("");
 
-	const { selectedCategoryId, setCategories, setProducts, setProductStocks, products: storeProducts } =
+	const { setCategories, setProducts, setProductStocks, products: storeProducts, productStocks } =
 		useSasCaseEditStore();
+	const { 
+		categoryId: selectedCategoryId,
+		series: selectedSeries,
+		colors: selectedColors,
+		sizes: selectedSizes,
+		priceRange: selectedPriceRange,
+		searchKeyword,
+		activeTab,
+		showInStockOnly,
+	} = useFilterStore();
 
 	// キャッシュからカテゴリと商品を取得
 	const { categories: cachedCategories, isLoading: categoriesLoading } = useCachedCategories();
@@ -92,19 +106,17 @@ export function ProductSelectionPanel() {
 		}
 	}, [itemsResponse, setProductStocks]);
 
-	// カテゴリフィルタリング（子カテゴリも含む）
-	useEffect(() => {
+	// フィルタリング処理
+	const filteredProducts = useMemo(() => {
 		if (!storeProducts || storeProducts.length === 0) {
-			setDisplayedProducts([]);
-			return;
+			return [];
 		}
 
-		if (!selectedCategoryId) {
-			// 全商品を表示
-			setDisplayedProducts(storeProducts);
-		} else {
-			// カテゴリでフィルタ（選択したカテゴリおよびその子カテゴリの商品を表示）
-			const filtered = storeProducts.filter((product) => {
+		let filtered = [...storeProducts];
+
+		// カテゴリフィルタ（子カテゴリも含む）
+		if (selectedCategoryId) {
+			filtered = filtered.filter((product) => {
 				// 商品のカテゴリが選択されたカテゴリと一致
 				if (product.categoryId === selectedCategoryId) {
 					return true;
@@ -124,9 +136,77 @@ export function ProductSelectionPanel() {
 				
 				return false;
 			});
-			setDisplayedProducts(filtered);
 		}
-	}, [storeProducts, selectedCategoryId, cachedCategories]);
+
+		// シリーズフィルタ
+		if (selectedSeries.length > 0) {
+			filtered = filtered.filter((product) => {
+				const series = product.attribute?.custom_series;
+				return series && selectedSeries.includes(series);
+			});
+		}
+
+		// 色フィルタ
+		if (selectedColors.length > 0) {
+			filtered = filtered.filter((product) => {
+				const color = product.attribute?.color;
+				return color && selectedColors.includes(color);
+			});
+		}
+
+		// サイズフィルタ
+		if (selectedSizes.length > 0) {
+			filtered = filtered.filter((product) => {
+				const size = product.attribute?.custom_size;
+				return size && selectedSizes.includes(size);
+			});
+		}
+
+		// 価格フィルタ（TODO: 実際の価格データ構造に合わせて修正が必要）
+		if (selectedPriceRange) {
+			filtered = filtered.filter((product) => {
+				// 仮実装：商品IDから仮の価格を生成
+				const price = parseInt(product.id) * 100;
+				const { min, max } = selectedPriceRange;
+				return (
+					(min === null || price >= min) &&
+					(max === null || price <= max)
+				);
+			});
+		}
+
+		// キーワード検索
+		if (searchKeyword) {
+			const keyword = searchKeyword.toLowerCase();
+			filtered = filtered.filter((product) => {
+				return (
+					product.title.toLowerCase().includes(keyword) ||
+					product.code.toLowerCase().includes(keyword) ||
+					product.aliasCode?.toLowerCase().includes(keyword) ||
+					product.attribute?.custom_description?.toLowerCase().includes(keyword) ||
+					product.attribute?.custom_series?.toLowerCase().includes(keyword)
+				);
+			});
+		}
+
+		// 在庫ありのみフィルタ
+		if (showInStockOnly) {
+			filtered = filtered.filter((product) => {
+				const stocks = productStocks.get(product.id) || [];
+				const totalStock = stocks.reduce((sum, stock) => sum + stock.quantity, 0);
+				return totalStock > 0;
+			});
+		}
+
+		return filtered;
+	}, [storeProducts, selectedCategoryId, selectedSeries, selectedColors, selectedSizes, selectedPriceRange, searchKeyword, cachedCategories, showInStockOnly, productStocks]);
+
+
+
+	// 表示する商品を決定
+	useEffect(() => {
+		setDisplayedProducts(filteredProducts);
+	}, [filteredProducts]);
 
 	// 初期ローディング中の表示
 	if (categoriesLoading || productsLoading) {
@@ -142,8 +222,19 @@ export function ProductSelectionPanel() {
 
 	return (
 		<div className="h-full flex flex-col overflow-hidden">
-			<CategoryTabs />
+			{/* 検索バー */}
+			<SearchBar />
+			
+			{/* フィルタータブ */}
+			<FilterTabs />
+			
+			{/* フィルターコンテンツ */}
+			{activeTab && <FilterContent />}
+			
+			{/* 商品表示エリア */}
 			<div className="flex-1 overflow-y-auto">
+					
+				{/* 通常の商品グリッド */}
 				<ProductGrid products={displayedProducts} />
 			</div>
 		</div>

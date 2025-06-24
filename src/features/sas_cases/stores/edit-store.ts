@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { SasCase, Goods, GoodsInput, GoodsUpdateInput } from "@/features/sas_cases/types";
 import type { Product } from "@/features/products/types";
 import type { Category } from "@/features/categories/types";
-import type { ItemStock } from "@/features/items/types";
+import type { Item, ItemStock } from "@/features/items/types";
 
 export interface CartItem {
 	id: string; // 一時ID
@@ -50,6 +50,10 @@ interface SasCaseEditStore {
 	setProducts: (products: Product[]) => void;
 	setProductStocks: (productId: string, stocks: ItemStock[]) => void;
 	setSelectedCategory: (categoryId: string | null) => void;
+	
+	// 商品情報解決
+	getProductById: (productId: string) => Product | undefined;
+	resolveProductsForGoods: (goods: Goods[]) => Promise<void>;
 
 	// カート操作
 	addToCart: (product: Product, quantity?: number) => void;
@@ -97,18 +101,45 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 
 	// 初期化
 	initialize: (caseId, sasCase) => {
-		// 既存のgoodsをカートアイテムに変換
-		const cartItems: CartItem[] = sasCase.goods.map((goods) => ({
-			id: goods.id.toString(),
-			productId: goods.itemId.toString(), // TODO: itemIdからproductIdへの変換が必要
-			product: {} as Product, // TODO: 商品情報の取得が必要
-			itemId: goods.itemId,
-			quantity: goods.quantity,
-			unitPrice: goods.unitPrice,
-			locationId: Number(goods.locationId),
-			unitAdjustment: goods.unitAdjustment,
-			originalGoodsId: goods.id.toString(),
-		}));
+		const state = get();
+		
+		// 既存のcartItemsから商品情報を保持するためのマップを作成
+		const existingProductMap = new Map<string, Product>();
+		state.cartItems.forEach(item => {
+			if (item.product) {
+				existingProductMap.set(item.itemId, item.product);
+			}
+		});
+		
+		// 既存のgoodsをカートアイテムに変換（一時的な商品情報で）
+		const cartItems: CartItem[] = sasCase.goods.map((goods) => {
+			// 既存の商品情報があれば使用、なければ基本情報で作成
+			const existingProduct = existingProductMap.get(goods.itemId);
+			const product = existingProduct || {
+				id: goods.itemId.toString(),
+				title: goods.productName || `商品 ${goods.itemId}`,
+				code: goods.productCode || goods.itemId,
+				aliasCode: null,
+				status: "ACTIVE" as const,
+				attribute: {},
+				imageUrls: [],
+				categoryId: "",
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			} as Product;
+			
+			return {
+				id: goods.id.toString(),
+				productId: goods.itemId.toString(), // 一時的にitemIdを使用
+				product,
+				itemId: goods.itemId,
+				quantity: goods.quantity,
+				unitPrice: goods.unitPrice,
+				locationId: Number(goods.locationId),
+				unitAdjustment: goods.unitAdjustment,
+				originalGoodsId: goods.id.toString(),
+			};
+		});
 
 		set({
 			caseId,
@@ -119,6 +150,9 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			customerNote: sasCase.customerNote || null,
 			error: null,
 		});
+		
+		// 非同期で商品情報を解決
+		get().resolveProductsForGoods(sasCase.goods);
 	},
 
 	reset: () => {
@@ -148,6 +182,58 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		set({ productStocks: newStocks });
 	},
 	setSelectedCategory: (categoryId) => set({ selectedCategoryId: categoryId }),
+	
+	// 商品情報解決
+	getProductById: (productId) => {
+		const { products } = get();
+		return products.find(p => p.id === productId);
+	},
+	
+	resolveProductsForGoods: async (goods) => {
+		const state = get();
+		
+		// goodsからitemIdを収集
+		const itemIds = goods.map(g => g.itemId);
+		if (itemIds.length === 0) return;
+		
+		try {
+			// 在庫情報を一括取得
+			const response = await fetch(`/api/items?ids=${itemIds.join(',')}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch items');
+			}
+			
+			const { data: items } = await response.json() as { data: Item[] };
+			
+			// itemId -> Item のマップを作成
+			const itemMap = new Map<string, Item>();
+			items.forEach(item => {
+				itemMap.set(item.id, item);
+			});
+			
+			// 既存のcartItemsを更新
+			const updatedCartItems = state.cartItems.map(cartItem => {
+				const item = itemMap.get(cartItem.itemId);
+				if (item) {
+					// キャッシュから商品情報を取得
+					const product = state.getProductById(item.productId);
+					if (product) {
+						return {
+							...cartItem,
+							productId: item.productId,
+							product,
+						};
+					}
+				}
+				return cartItem;
+			});
+			
+			set({ cartItems: updatedCartItems });
+		} catch (error) {
+			console.error('Failed to resolve products for goods:', error);
+			set({ error: '商品情報の取得に失敗しました' });
+		}
+	},
 
 	// カート操作
 	addToCart: (product, quantity = 1) => {
@@ -168,7 +254,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		const stocks = productStocks.get(product.id.toString()) || [];
 		const defaultStock = stocks.find((s) => s.status === "ACTIVE") || stocks[0];
 
-		if (!defaultStock) {
+		if (!defaultStock || !defaultStock.itemId) {
 			set({ error: "在庫情報が見つかりません" });
 			return;
 		}
@@ -178,7 +264,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			id: `new-${Date.now()}-${Math.random()}`,
 			productId: product.id.toString(),
 			product,
-			itemId: defaultStock.itemId || product.id.toString(), // itemIdが無い場合はproductIdを使用
+			itemId: defaultStock.itemId, // 在庫情報のitemIdを使用
 			quantity,
 			unitPrice: defaultStock.price,
 			locationId: defaultStock.location.id,

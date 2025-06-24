@@ -43,9 +43,22 @@ export class SasCasesClient extends BaseClient {
 	 * 店頭販売ケースを作成
 	 */
 	async create(input: SasCaseCreateInput): Promise<SasCase> {
+		console.log("[SasCasesClient.create] Input:", input);
 		const recoreInput = convertSasCaseCreateInputToRecore(input);
-		const response = await this.post<RecoreSasCase>("/sas_cases", recoreInput);
-		return convertRecoreSasCaseToSasCase(response);
+		console.log("[SasCasesClient.create] ReCORE Input:", recoreInput);
+		
+		try {
+			const response = await this.post<RecoreSasCase>("/sas_cases", recoreInput);
+			console.log("[SasCasesClient.create] ReCORE Response:", response);
+			
+			const result = convertRecoreSasCaseToSasCase(response);
+			console.log("[SasCasesClient.create] Converted Result:", result);
+			
+			return result;
+		} catch (error) {
+			console.error("[SasCasesClient.create] API Error:", error);
+			throw error;
+		}
 	}
 
 	/**

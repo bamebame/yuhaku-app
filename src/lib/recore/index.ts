@@ -7,3 +7,5 @@ export type {
 } from "./baseClient";
 
 export { SasCasesClient } from "./sas_cases";
+export { ProductAttributesClient } from "./product-attributes";
+export type { ProductAttribute } from "./product-attributes";

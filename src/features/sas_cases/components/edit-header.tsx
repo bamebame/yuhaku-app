@@ -9,6 +9,7 @@ import { updateSasCaseFormAction } from "@/features/sas_cases/actions";
 import { checkoutSasCaseFormAction } from "@/features/sas_cases/actions";
 import { mutate } from "swr";
 import { CheckoutDialog, type PaymentData } from "./checkout-dialog";
+import { fetchMissingProductsForCase } from "@/features/sas_cases/helpers/fetch-missing-products";
 
 export function SasCaseEditHeader() {
 	const { toast } = useToast();
@@ -67,8 +68,14 @@ export function SasCaseEditHeader() {
 					title: "保存しました",
 					description: "販売ケースを更新しました",
 				});
-				// SWRキャッシュを更新
-				await mutate(`/api/sas-cases/${caseId}`);
+				
+				// 商品情報が不足している場合は補完
+				const updatedCase = await fetchMissingProductsForCase(result.data);
+				
+				// SWRキャッシュを更新（データを直接更新して再初期化を防ぐ）
+				await mutate(`/api/sas-cases/${caseId}`, async () => {
+					return { data: updatedCase };
+				}, false);
 			} else {
 				throw new Error("更新に失敗しました");
 			}

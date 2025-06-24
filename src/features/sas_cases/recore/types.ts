@@ -45,6 +45,12 @@ export interface RecoreGoods {
 	tax_free_type: "GENERAL" | "CONSUMPTION" | "INELIGIBLE";
 	quantity: number;
 	reserved_quantity: number;
+	// 商品情報（APIレスポンスに含まれる場合）
+	product?: {
+		id: number;
+		name: string;
+		code: string;
+	};
 }
 
 // 税情報

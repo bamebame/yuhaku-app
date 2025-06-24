@@ -96,6 +96,9 @@ export function convertRecoreGoodsToGoods(recore: RecoreGoods): Goods {
 		taxFreeType: recore.tax_free_type,
 		quantity: recore.quantity,
 		reservedQuantity: recore.reserved_quantity,
+		// 商品情報があれば追加
+		productName: recore.product?.name,
+		productCode: recore.product?.code,
 	};
 }
 
