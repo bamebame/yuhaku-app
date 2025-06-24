@@ -87,7 +87,7 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 						
 						<div className="flex items-center gap-4 text-pos-sm">
 							<span className="font-bold">¥{defaultPrice.toLocaleString()}</span>
-							<span className={`${hasStock ? "text-pos-muted" : "text-red-600"}`}>
+							<span className={`${hasStock ? "text-pos-muted" : "text-destructive"}`}>
 								在庫: {totalStock}
 							</span>
 						</div>

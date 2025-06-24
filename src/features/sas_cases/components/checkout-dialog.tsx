@@ -264,7 +264,7 @@ export function CheckoutDialog({
 											onClick={() => handleRemovePayment(index)}
 											className="h-6 w-6 p-0"
 										>
-											<X className="h-4 w-4 text-red-600" />
+											<X className="h-4 w-4 text-destructive" />
 										</PosButton>
 									</div>
 									<PosInput

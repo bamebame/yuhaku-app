@@ -90,23 +90,25 @@ export default function SasCasesPage() {
 	const totalPages = Math.ceil(cases.length / 250); // API側で250件制限があるため
 	
 	return (
-		<div className="h-full flex flex-col min-w-[1000px] p-6">
+		<div className="h-full flex flex-col">
 			{/* ヘッダー */}
-			<div className="mb-6 flex items-center justify-between">
-				<h1 className="text-2xl font-bold">販売ケース一覧</h1>
+			<div className="border-b-3 border-pos-border px-4 py-3 flex items-center justify-between bg-pos-background">
+				<h1 className="text-pos-lg font-semibold flex items-center gap-2">
+					<List className="h-5 w-5" />
+					販売ケース一覧
+				</h1>
 				<PosButton 
-					size="lg" 
-					className="px-8" 
+					size="default" 
 					onClick={handleCreateNewCase}
 					disabled={isCreating}
 				>
-					<Plus className="mr-2 h-5 w-5" />
+					<Plus className="mr-2 h-4 w-4" />
 					新規販売開始
 				</PosButton>
 			</div>
 			
 			{/* タブ */}
-			<PosTabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
+			<PosTabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col p-6">
 				<PosTabsList className="grid w-full grid-cols-3 mb-6">
 					<PosTabsTrigger value="in-progress" className="flex items-center gap-2">
 						<ShoppingCart className="h-4 w-4" />

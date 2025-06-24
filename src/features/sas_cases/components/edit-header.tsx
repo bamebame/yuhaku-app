@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { PosButton } from "@/components/pos";
-import { Save, CheckCircle, ShoppingCart, Check, AlertCircle } from "lucide-react";
+import { Save, CheckCircle, ShoppingCart, Check, AlertCircle, Plus, List } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { updateSasCaseFormAction } from "@/features/sas_cases/actions";
 import { checkoutSasCaseFormAction } from "@/features/sas_cases/actions";
 import { mutate } from "swr";
 import { CheckoutDialog, type PaymentData } from "./checkout-dialog";
 import { fetchMissingProductsForCase } from "@/features/sas_cases/helpers/fetch-missing-products";
+import { createEmptySasCase } from "@/features/sas_cases/actions/create-empty";
 
 export function SasCaseEditHeader() {
 	const router = useRouter();
@@ -18,6 +19,7 @@ export function SasCaseEditHeader() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
 	const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+	const [isCreatingNew, setIsCreatingNew] = useState(false);
 
 	const { caseId, originalCase, cartItems, getUpdateData, isSaving: isAutoSaving, lastSaved, error } = useSasCaseEditStore();
 
@@ -100,6 +102,24 @@ export function SasCaseEditHeader() {
 
 		// 決済ダイアログを表示
 		setShowCheckoutDialog(true);
+	};
+
+	const handleCreateNewCase = async () => {
+		try {
+			setIsCreatingNew(true);
+			const newCase = await createEmptySasCase();
+			router.push(`/sas-cases/${newCase.id}`);
+		} catch (error) {
+			console.error("販売ケースの作成に失敗しました:", error);
+			const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
+			toast({
+				title: "エラー",
+				description: `販売ケースの作成に失敗しました。${errorMessage}`,
+				variant: "destructive",
+			});
+		} finally {
+			setIsCreatingNew(false);
+		}
 	};
 
 	const handleCheckoutConfirm = async (payments: PaymentData[]) => {
@@ -219,11 +239,24 @@ export function SasCaseEditHeader() {
 					) : null}
 				</div>
 
-				<div className="text-right mr-4">
-					<p className="text-pos-sm text-pos-muted">合計金額</p>
-					<p className="text-pos-xl font-bold">
-						¥{calculateTotal().toLocaleString()}
-					</p>
+				{/* ボタングループ */}
+				<div className="flex items-center gap-2">
+					<PosButton
+						size="default"
+						variant="outline"
+						onClick={() => router.push('/sas-cases')}
+					>
+						<List className="mr-2 h-4 w-4" />
+						一覧に戻る
+					</PosButton>
+					<PosButton
+						size="default"
+						onClick={handleCreateNewCase}
+						disabled={isCreatingNew}
+					>
+						<Plus className="mr-2 h-4 w-4" />
+						新規販売
+					</PosButton>
 				</div>
 			</div>
 

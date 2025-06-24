@@ -61,7 +61,7 @@ export function CartItem({ item }: CartItemProps) {
 						</p>
 						{/* 在庫警告 */}
 						{isOverStock && (
-							<div className="flex items-center gap-1 mt-1 text-red-600 text-pos-xs">
+							<div className="flex items-center gap-1 mt-1 text-destructive text-pos-xs">
 								<AlertTriangle className="h-3 w-3" />
 								<span>在庫不足（残り{availableStock}個）</span>
 							</div>
@@ -70,7 +70,7 @@ export function CartItem({ item }: CartItemProps) {
 					<PosButton
 						variant="ghost"
 						size="icon"
-						className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+						className="h-8 w-8 text-destructive hover:text-red-700 hover:bg-red-50"
 						onClick={handleRemove}
 					>
 						<Trash2 className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function CartItem({ item }: CartItemProps) {
 						>
 							<Minus className="h-3 w-3" />
 						</PosButton>
-						<span className={`w-12 text-center font-medium text-pos-base ${isOverStock ? "text-red-600" : ""}`}>
+						<span className={`w-12 text-center font-medium text-pos-base ${isOverStock ? "text-destructive" : ""}`}>
 							{item.quantity}
 						</span>
 						<PosButton
