@@ -296,3 +296,41 @@ npm run db:reset
 
 ### カスタムフック
 - `hooks/useSWRWithRetry.ts` - 指数バックオフリトライ機能付きSWR
+
+## 2025-06-24 Config API実装
+
+### 実装内容
+- ReCORE API `/configs` エンドポイントからの金種(payments)とレジ(cashiers)情報の取得
+- 24時間キャッシュ機能の実装（API RouteとSWR両方で設定）
+- 型安全な実装（ReCORE API型と内部型の分離）
+
+### 実装詳細
+1. **型定義**
+   - `RecorePayment`, `RecoreCashier` - ReCORE API型
+   - `Payment`, `Cashier` - 内部型
+   - 型変換関数での安全な変換
+
+2. **API実装**
+   - `ConfigClient` - ReCORE APIクライアント
+   - `/api/config` - API Route（revalidate: 86400で24時間キャッシュ）
+   - 型変換によるsnake_case → camelCase変換
+
+3. **フロントエンド実装**
+   - `useConfig()` - Config全体を取得
+   - `usePayments()` - 金種情報のみ取得
+   - `useCashiers()` - レジ情報のみ取得
+   - SWRの設定で24時間キャッシュ（dedupingInterval, refreshInterval）
+
+### 使用例
+```typescript
+// コンポーネントでの使用
+import { usePayments, useCashiers } from "@/features/config/hooks"
+
+export function CheckoutForm() {
+  const { payments, isLoading: isLoadingPayments } = usePayments()
+  const { cashiers, isLoading: isLoadingCashiers } = useCashiers()
+  
+  // 金種選択
+  // レジ選択
+}
+```
