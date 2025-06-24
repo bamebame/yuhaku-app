@@ -62,12 +62,10 @@ export function SasCasesList({ cases }: SasCasesListProps) {
 									{format(sasCase.createdAt, "MM/dd HH:mm", { locale: ja })}
 								</span>
 							</div>
-							{sasCase.memberId && (
-								<div className="flex items-center gap-2 text-pos-muted">
-									<User className="h-4 w-4" />
-									<span>会員ID: {sasCase.memberId}</span>
-								</div>
-							)}
+							<div className="flex items-center gap-2 text-pos-muted">
+								<User className="h-4 w-4" />
+								<span>会員: {sasCase.memberId || "未選択"}</span>
+							</div>
 							<div className="flex justify-between items-center pt-2">
 								<div>
 									<p className="text-pos-xs text-pos-muted">商品数</p>

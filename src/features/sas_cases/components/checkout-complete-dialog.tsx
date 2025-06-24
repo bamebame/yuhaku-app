@@ -32,7 +32,7 @@ export function CheckoutCompleteDialog({
 			<PosDialogContent className="max-w-md">
 				<PosDialogHeader>
 					<PosDialogTitle className="flex items-center gap-2">
-						<CheckCircle className="h-6 w-6 text-green-600" />
+						<CheckCircle className="h-6 w-6 text-success" />
 						決済完了
 					</PosDialogTitle>
 				</PosDialogHeader>
@@ -51,7 +51,7 @@ export function CheckoutCompleteDialog({
 						<div className="border-t border-pos-border pt-2">
 							<div className="flex justify-between text-pos-xl font-bold">
 								<span>お釣り</span>
-								<span className="text-green-600">¥{change.toLocaleString()}</span>
+								<span className="text-success">¥{change.toLocaleString()}</span>
 							</div>
 						</div>
 					</div>

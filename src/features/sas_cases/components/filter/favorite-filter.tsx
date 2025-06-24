@@ -9,7 +9,7 @@ export function FavoriteFilter() {
 	return (
 		<div className="p-4">
 			<div className="flex items-center gap-2">
-				<Heart className="h-5 w-5 fill-red-500 text-red-500" />
+				<Heart className="h-5 w-5 fill-destructive text-destructive" />
 				<h3 className="text-lg font-semibold">
 					お気に入り商品 ({favorites.length}件)
 				</h3>

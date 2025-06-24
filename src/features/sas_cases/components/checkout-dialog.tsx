@@ -264,7 +264,7 @@ export function CheckoutDialog({
 											onClick={() => handleRemovePayment(index)}
 											className="h-6 w-6 p-0"
 										>
-											<X className="h-4 w-4 text-red-600" />
+											<X className="h-4 w-4 text-destructive" />
 										</PosButton>
 									</div>
 									<PosInput
@@ -286,7 +286,7 @@ export function CheckoutDialog({
 						{remaining > 0 && (
 							<div className="flex justify-between text-pos-base">
 								<span>残金</span>
-								<span className="text-red-600 font-bold">
+								<span className="text-destructive font-bold">
 									¥{remaining.toLocaleString()}
 								</span>
 							</div>

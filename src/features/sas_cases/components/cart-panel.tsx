@@ -283,7 +283,7 @@ export function CartPanel() {
 
 					<div className="flex justify-between text-sm">
 						<span>クーポン割引</span>
-						<span className={couponAdjustment !== 0 ? "text-red-600" : ""}>¥{couponAdjustment.toLocaleString()}</span>
+						<span className={couponAdjustment !== 0 ? "text-destructive" : ""}>¥{couponAdjustment.toLocaleString()}</span>
 					</div>
 
 					<div className="flex justify-between items-center text-sm">
@@ -334,12 +334,11 @@ export function CartPanel() {
 								</PosButton>
 							</div>
 						) : (
-							<span className={caseAdjustment < 0 ? "text-red-600" : ""}>
+							<span className={caseAdjustment < 0 ? "text-destructive" : ""}>
 								¥{caseAdjustment.toLocaleString()}
 							</span>
 						)}
 					</div>
-
 					{/* 税額表示 */}
 					{summary?.taxes && summary.taxes.length > 0 && (
 						<>

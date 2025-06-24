@@ -119,7 +119,7 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 				left={<ProductSelectionPanel />}
 				right={
 					<PosTabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-						<PosTabsList className="grid w-full grid-cols-2 flex-shrink-0">
+						<PosTabsList className="grid w-full grid-cols-2 flex-shrink-0 border-t-0 border-l-0 border-r-0">
 							<PosTabsTrigger value="cart" className="flex items-center gap-2">
 								<ShoppingCart className="h-4 w-4" />
 								カート

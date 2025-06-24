@@ -87,7 +87,7 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 						
 						<div className="flex items-center gap-4 text-pos-sm">
 							<span className="font-bold">¥{defaultPrice.toLocaleString()}</span>
-							<span className={`${hasStock ? "text-pos-muted" : "text-red-600"}`}>
+							<span className={`${hasStock ? "text-pos-muted" : "text-destructive"}`}>
 								在庫: {totalStock}
 							</span>
 						</div>
@@ -148,7 +148,7 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 				className={cn(
 					"absolute top-2 right-2 z-10 p-1.5 rounded-full transition-colors",
 					"bg-white/80 hover:bg-white border-2 border-pos-border",
-					isFavorite(product.id) && "bg-red-500 hover:bg-red-600 border-red-500"
+					isFavorite(product.id) && "bg-destructive hover:bg-destructive/90 border-destructive"
 				)}
 			>
 				<Heart className={cn(
@@ -182,7 +182,7 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 					<span className="text-pos-base font-bold">
 						¥{defaultPrice.toLocaleString()}
 					</span>
-					<span className={`text-pos-xs ${hasStock ? "" : "text-red-600"}`}>
+					<span className={`text-pos-xs ${hasStock ? "" : "text-destructive"}`}>
 						在庫: {totalStock}
 					</span>
 				</div>
