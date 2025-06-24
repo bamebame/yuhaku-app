@@ -127,19 +127,7 @@ export function ProductGrid({ products }: ProductGridProps) {
 				) : (
 					<div className="divide-y-2 divide-pos-border">
 						{sortedProducts.map((product) => (
-							<div
-								key={product.id}
-								className="p-4 hover:bg-pos-hover transition-colors cursor-pointer"
-							>
-								{/* TODO: リスト表示の実装 */}
-								<div className="flex items-center gap-4">
-									<div className="w-16 h-16 bg-pos-light border-2 border-pos-border" />
-									<div className="flex-1">
-										<div className="font-semibold">{product.title}</div>
-										<div className="text-sm text-pos-muted">{product.code}</div>
-									</div>
-								</div>
-							</div>
+							<ProductCard key={product.id} product={product} isListView={true} />
 						))}
 					</div>
 				)}

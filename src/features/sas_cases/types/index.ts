@@ -155,6 +155,7 @@ export interface SasCaseSearchParams {
 	ids?: string[];
 	codes?: string[];
 	statuses?: SasCaseStatus[];
+	memberIds?: string[];
 	createdAtFrom?: Date;
 	createdAtTo?: Date;
 	updatedAtFrom?: Date;

@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
 	product: Product;
+	isListView?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, isListView = false }: ProductCardProps) {
 	const [isAdding, setIsAdding] = useState(false);
 	const [showStockDialog, setShowStockDialog] = useState(false);
 	const { productStocks, addToCart } = useSasCaseEditStore();
@@ -61,6 +62,80 @@ export function ProductCard({ product }: ProductCardProps) {
 			setIsAdding(false);
 		}
 	};
+
+	if (isListView) {
+		return (
+			<div className="p-4 hover:bg-pos-hover transition-colors">
+				<div className="flex items-center gap-4">
+					{/* 商品画像 */}
+					<div className="w-20 h-20 bg-pos-light border-2 border-pos-border flex items-center justify-center overflow-hidden flex-shrink-0">
+						{product.imageUrls && product.imageUrls.length > 0 ? (
+							<img
+								src={product.imageUrls[0]}
+								alt={product.title}
+								className="w-full h-full object-cover"
+							/>
+						) : (
+							<Package className="h-8 w-8 text-pos-muted" />
+						)}
+					</div>
+
+					{/* 商品情報 */}
+					<div className="flex-1 min-w-0">
+						<h3 className="font-semibold text-pos-base mb-1">{product.title}</h3>
+						<p className="text-pos-sm text-pos-muted mb-2">{product.code}</p>
+						
+						<div className="flex items-center gap-4 text-pos-sm">
+							<span className="font-bold">¥{defaultPrice.toLocaleString()}</span>
+							<span className={`${hasStock ? "text-pos-muted" : "text-red-600"}`}>
+								在庫: {totalStock}
+							</span>
+						</div>
+					</div>
+
+					{/* お気に入りとカートボタン */}
+					<div className="flex items-center gap-2 flex-shrink-0">
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								toggleFavorite(product.id);
+							}}
+							className={cn(
+								"p-2 rounded-full transition-colors border-2 border-pos-border",
+								"bg-white hover:bg-pos-hover",
+								isFavorite(product.id) && "bg-red-500 hover:bg-red-600 border-red-500"
+							)}
+						>
+							<Heart className={cn(
+								"h-4 w-4",
+								isFavorite(product.id) ? "fill-white text-white" : "text-pos-muted"
+							)} />
+						</button>
+
+						<PosButton
+							size="sm"
+							onClick={handleAddToCart}
+							disabled={!hasStock || isAdding}
+							variant={hasStock ? "default" : "secondary"}
+							className="min-w-[100px]"
+						>
+							<Plus className="mr-1 h-3 w-3" />
+							{hasStock ? "カートへ" : "在庫なし"}
+						</PosButton>
+					</div>
+				</div>
+
+				{/* 在庫選択ダイアログ */}
+				<StockSelectionDialog
+					product={product}
+					stocks={stocks}
+					open={showStockDialog}
+					onOpenChange={setShowStockDialog}
+					onSelect={handleStockSelect}
+				/>
+			</div>
+		);
+	}
 
 	return (
 		<PosCard className="relative p-3 flex flex-col gap-2 hover:bg-pos-hover transition-colors cursor-pointer">

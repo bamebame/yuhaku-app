@@ -39,6 +39,7 @@ export function ProductSelectionPanel() {
 		searchKeyword,
 		activeTab,
 		showInStockOnly,
+		favorites,
 	} = useFilterStore();
 
 	// キャッシュからカテゴリと商品を取得
@@ -113,6 +114,15 @@ export function ProductSelectionPanel() {
 		}
 
 		let filtered = [...storeProducts];
+
+		// お気に入りタブが選択されている場合は、お気に入り商品のみを表示
+		if (activeTab === 'favorite') {
+			filtered = filtered.filter(product => 
+				favorites.some(fav => fav.productId === product.id)
+			);
+			// お気に入りタブの場合は他のフィルタは適用しない
+			return filtered;
+		}
 
 		// カテゴリフィルタ（子カテゴリも含む）
 		if (selectedCategoryId) {
@@ -199,7 +209,7 @@ export function ProductSelectionPanel() {
 		}
 
 		return filtered;
-	}, [storeProducts, selectedCategoryId, selectedSeries, selectedColors, selectedSizes, selectedPriceRange, searchKeyword, cachedCategories, showInStockOnly, productStocks]);
+	}, [storeProducts, selectedCategoryId, selectedSeries, selectedColors, selectedSizes, selectedPriceRange, searchKeyword, cachedCategories, showInStockOnly, productStocks, activeTab, favorites]);
 
 
 
@@ -233,9 +243,19 @@ export function ProductSelectionPanel() {
 			
 			{/* 商品表示エリア */}
 			<div className="flex-1 overflow-y-auto">
-					
-				{/* 通常の商品グリッド */}
-				<ProductGrid products={displayedProducts} />
+				{/* お気に入りタブで商品がない場合のメッセージ */}
+				{activeTab === 'favorite' && displayedProducts.length === 0 ? (
+					<div className="p-8 text-center text-pos-muted">
+						<div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center">
+							<span className="text-4xl">♡</span>
+						</div>
+						<p className="text-lg font-medium mb-2">お気に入りがありません</p>
+						<p className="text-sm">商品カードの♡ボタンでお気に入りに追加できます</p>
+					</div>
+				) : (
+					/* 通常の商品グリッド */
+					<ProductGrid products={displayedProducts} />
+				)}
 			</div>
 		</div>
 	);

@@ -7,10 +7,11 @@ import type { Product } from "@/features/products/types";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { PosCard, PosCardHeader, PosCardTitle, PosCardContent, PosButton } from "@/components/pos";
-import { CheckCircle, Printer, FileText, User, ShoppingCart, ArrowLeft } from "lucide-react";
+import { CheckCircle, Printer, FileText, User, ShoppingCart, ArrowLeft, Plus } from "lucide-react";
 import { useReceiptPrinter } from "@/features/receipt/hooks/use-receipt-printer";
 import { PrinterSettingsDialog } from "@/features/receipt/components";
 import { useToast } from "@/hooks/use-toast";
+import { createEmptySasCase } from "@/features/sas_cases/actions/create-empty";
 import type { 
   ReceiptData, 
   ReceiptCartItem, 
@@ -37,6 +38,7 @@ export function CompletedSummary({ sasCase, charges }: CompletedSummaryProps) {
 	const router = useRouter();
 	const { toast } = useToast();
 	const [isPrinting, setIsPrinting] = useState(false);
+	const [isCreating, setIsCreating] = useState(false);
 	const [productMap, setProductMap] = useState<Map<string, Product>>(new Map());
 
 	// レシートプリンター
@@ -112,6 +114,25 @@ export function CompletedSummary({ sasCase, charges }: CompletedSummaryProps) {
 		
 		fetchProducts();
 	}, [sasCase.goods]);
+
+	// 新規販売ケース作成
+	const handleCreateNewCase = async () => {
+		try {
+			setIsCreating(true);
+			const newCase = await createEmptySasCase();
+			// 作成されたケースの編集ページへ遷移
+			router.push(`/sas-cases/${newCase.id}`);
+		} catch (error) {
+			console.error("販売ケースの作成に失敗しました:", error);
+			toast({
+				title: "エラー",
+				description: "新規販売ケースの作成に失敗しました",
+				variant: "destructive",
+			});
+		} finally {
+			setIsCreating(false);
+		}
+	};
 
 	// レシート再印刷
 	const handlePrintReceipt = async () => {
@@ -229,16 +250,7 @@ export function CompletedSummary({ sasCase, charges }: CompletedSummaryProps) {
 						<CheckCircle className="h-8 w-8 text-success" />
 						販売完了
 					</h1>
-					<div className="flex items-center gap-2">
-						<PosButton
-							variant="outline"
-							onClick={() => router.push("/sas-cases")}
-						>
-							<ArrowLeft className="mr-2 h-4 w-4" />
-							一覧に戻る
-						</PosButton>
-						<PrinterSettingsDialog printer={receiptPrinter} />
-					</div>
+					<PrinterSettingsDialog printer={receiptPrinter} />
 				</div>
 
 				{/* サマリーカード */}
@@ -369,6 +381,36 @@ export function CompletedSummary({ sasCase, charges }: CompletedSummaryProps) {
 							<p className="text-pos-sm text-pos-muted">
 								完了日時: {sasCase.doneAt ? format(sasCase.doneAt, "yyyy年MM月dd日 HH:mm", { locale: ja }) : "不明"}
 							</p>
+						</div>
+
+						{/* アクションボタン */}
+						<div className="border-t border-pos-border pt-4 flex gap-2">
+							<PosButton
+								variant="outline"
+								onClick={() => router.push("/sas-cases")}
+								className="flex-1"
+							>
+								<ArrowLeft className="mr-2 h-4 w-4" />
+								一覧に戻る
+							</PosButton>
+							<PosButton
+								variant="default"
+								onClick={handleCreateNewCase}
+								disabled={isCreating}
+								className="flex-1"
+							>
+								{isCreating ? (
+									<>
+										<div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+										作成中...
+									</>
+								) : (
+									<>
+										<Plus className="mr-2 h-4 w-4" />
+										新しい販売を開始
+									</>
+								)}
+							</PosButton>
 						</div>
 					</PosCardContent>
 				</PosCard>
