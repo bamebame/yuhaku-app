@@ -162,6 +162,7 @@ export interface RecoreSasCaseSearchParams {
 	ids?: number[];
 	codes?: string[];
 	statuses?: string[];
+	member_ids?: number[];
 	created_at_from?: string;
 	created_at_to?: string;
 	updated_at_from?: string;

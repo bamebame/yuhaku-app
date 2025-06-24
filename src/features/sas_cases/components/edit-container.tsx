@@ -32,10 +32,13 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 		data: response,
 		error,
 		isLoading,
-	} = useSWR<{ data: SasCase }>(`/api/sas-cases/${caseId}`, fetcher);
+	} = useSWR<{ data: SasCase }>(`/api/sas-cases/${caseId}`, fetcher, {
+		refreshInterval: 5000, // 5秒ごとに更新
+	});
 	const { toast } = useToast();
 	const initialize = useSasCaseEditStore((state) => state.initialize);
 	const reset = useSasCaseEditStore((state) => state.reset);
+	const updateOriginalCase = useSasCaseEditStore((state) => state.updateOriginalCase);
 	const [activeTab, setActiveTab] = useState("cart");
 	const [checkoutInfo, setCheckoutInfo] = useState<CheckoutInfo | null>(null);
 
@@ -49,8 +52,11 @@ export function SasCaseEditContainer({ caseId }: SasCaseEditContainerProps) {
 			// 基本的な初期化を実行（商品情報の解決も含む）
 			initialize(caseId, sasCase);
 			setIsInitialized(true);
+		} else if (sasCase && isInitialized) {
+			// 既に初期化済みの場合は、originalCaseのみ更新
+			updateOriginalCase(sasCase);
 		}
-	}, [sasCase, caseId, initialize, isInitialized]);
+	}, [sasCase, caseId, initialize, updateOriginalCase, isInitialized]);
 	
 	// クリーンアップ
 	useEffect(() => {

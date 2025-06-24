@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
 			codes: searchParams.get("codes")?.split(","),
 			statuses: searchParams.get("statuses")?.split(",") as
 				| ("IN_PROGRESS" | "DONE")[]
-				| undefined,
+				| undefined || (searchParams.get("status") ? [searchParams.get("status")] as ("IN_PROGRESS" | "DONE")[] : undefined),
+			memberIds: searchParams.get("member_ids")?.split(","),
 			createdAtFrom: searchParams.get("created_at_from")
 				? new Date(searchParams.get("created_at_from") || "")
 				: undefined,

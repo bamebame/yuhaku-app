@@ -1,134 +1,101 @@
 "use client";
 
-import { useEffect } from "react";
-import useSWR from "swr";
-import type { SasCase } from "@/features/sas_cases/types";
+import { useRouter } from "next/navigation";
+import { PosCard, PosCardHeader, PosCardContent, PosButton, PosBadge } from "@/components/pos";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { PosButton } from "@/components/pos";
-import Link from "next/link";
-import { Eye, Edit, ShoppingCart } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { ShoppingCart, User, Calendar, ArrowRight } from "lucide-react";
+import type { SasCase } from "@/features/sas_cases/types";
 
-const fetcher = async (url: string) => {
-	const response = await fetch(url);
-	if (!response.ok) {
-		throw new Error("Failed to fetch sas cases");
-	}
-	const json = await response.json();
-	return json.data || [];
-};
+interface SasCasesListProps {
+	cases: SasCase[];
+}
 
-export function SasCasesList() {
-	const {
-		data: cases,
-		error,
-		isLoading,
-	} = useSWR<SasCase[]>("/api/sas-cases?status=IN_PROGRESS", fetcher, {
-		refreshInterval: 10000, // 10秒ごとに自動更新（進行中ケースは頻繁に更新）
-	});
-	const { toast } = useToast();
-
-	useEffect(() => {
-		if (error) {
-			toast({
-				title: "エラー",
-				description: "販売ケースの取得に失敗しました",
-				variant: "destructive",
-			});
-		}
-	}, [error, toast]);
-
-	if (isLoading) {
-		return null; // Skeletonはpage.tsxで表示
-	}
+export function SasCasesList({ cases }: SasCasesListProps) {
+	const router = useRouter();
 
 	if (!cases || cases.length === 0) {
 		return (
-			<div className="text-center py-12">
-				<p className="text-pos-muted text-lg">進行中の販売ケースはありません</p>
-				<p className="text-pos-muted text-sm mt-2">上のボタンから新規販売を開始してください</p>
+			<div className="text-center py-8 text-pos-muted">
+				販売ケースがありません
 			</div>
 		);
 	}
 
-	const getStatusBadge = (status: string) => {
-		switch (status) {
-			case "IN_PROGRESS":
-				return <Badge variant="default">進行中</Badge>;
-			case "DONE":
-				return <Badge variant="secondary">完了</Badge>;
-			default:
-				return <Badge variant="outline">{status}</Badge>;
-		}
-	};
-
-	const formatDateTime = (dateOrTimestamp: Date | number | string | null) => {
-		if (!dateOrTimestamp) return "-";
-		
-		let date: Date;
-		if (dateOrTimestamp instanceof Date) {
-			date = dateOrTimestamp;
-		} else if (typeof dateOrTimestamp === 'string') {
-			date = new Date(dateOrTimestamp);
-		} else if (typeof dateOrTimestamp === 'number') {
-			date = new Date(dateOrTimestamp * 1000);
-		} else {
-			return "-";
-		}
-		
-		if (isNaN(date.getTime())) {
-			console.error("Invalid date:", dateOrTimestamp);
-			return "-";
-		}
-		
-		return format(date, "yyyy/MM/dd HH:mm", {
-			locale: ja,
-		});
+	const handleContinue = (caseId: string) => {
+		router.push(`/sas-cases/${caseId}`);
 	};
 
 	return (
-		<div className="space-y-4">
-			{(cases || []).map((sasCase) => (
-				<div 
-					key={sasCase.id} 
-					className="border-2 border-pos-border bg-pos-background p-4 hover:bg-pos-hover transition-colors"
+		<div className="grid gap-4 grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+			{cases.map((sasCase) => (
+				<PosCard
+					key={sasCase.id}
+					className="hover:shadow-lg transition-shadow cursor-pointer min-w-[200px]"
+					onClick={() => handleContinue(sasCase.id)}
 				>
-					<div className="flex items-center justify-between">
-						<div className="flex-1">
-							<div className="flex items-center gap-4 mb-2">
-								<span className="font-mono text-lg font-bold">{sasCase.code}</span>
-								<span className="text-sm text-pos-muted">
-									{formatDateTime(sasCase.createdAt)}
+					<PosCardHeader className="pb-3">
+						<div className="flex justify-between items-start">
+							<div>
+								<h3 className="font-semibold text-pos-base">{sasCase.code}</h3>
+								<PosBadge
+									variant={
+										sasCase.status === "IN_PROGRESS" ? "default" : "secondary"
+									}
+									className="mt-1"
+								>
+									{sasCase.status === "IN_PROGRESS" ? "進行中" : "完了"}
+								</PosBadge>
+							</div>
+							<ShoppingCart className="h-5 w-5 text-pos-muted" />
+						</div>
+					</PosCardHeader>
+					<PosCardContent>
+						<div className="space-y-2 text-pos-sm">
+							<div className="flex items-center gap-2 text-pos-muted">
+								<User className="h-4 w-4" />
+								<span>{sasCase.staff?.name || "未設定"}</span>
+							</div>
+							<div className="flex items-center gap-2 text-pos-muted">
+								<Calendar className="h-4 w-4" />
+								<span>
+									{format(sasCase.createdAt, "MM/dd HH:mm", { locale: ja })}
 								</span>
 							</div>
-							<div className="flex items-center gap-6 text-sm">
-								<span>スタッフ: {sasCase.staff?.name || "-"}</span>
-								<span>商品数: {sasCase.summary?.quantity || 0}点</span>
-								<span className="font-bold text-lg">
-									¥{sasCase.summary?.total.toLocaleString() || 0}
-								</span>
+							{sasCase.memberId && (
+								<div className="flex items-center gap-2 text-pos-muted">
+									<User className="h-4 w-4" />
+									<span>会員ID: {sasCase.memberId}</span>
+								</div>
+							)}
+							<div className="flex justify-between items-center pt-2">
+								<div>
+									<p className="text-pos-xs text-pos-muted">商品数</p>
+									<p className="font-semibold">{sasCase.summary.quantity}点</p>
+								</div>
+								<div className="text-right">
+									<p className="text-pos-xs text-pos-muted">合計金額</p>
+									<p className="font-semibold">
+										¥{sasCase.summary.total.toLocaleString()}
+									</p>
+								</div>
 							</div>
 						</div>
-						<div>
-							<Link href={`/sas-cases/${sasCase.id}`}>
-								<PosButton size="lg" className="font-bold">
-									<ShoppingCart className="mr-2 h-5 w-5" />
-									販売を続ける
-								</PosButton>
-							</Link>
+						<div className="mt-4 flex justify-end">
+							<PosButton
+								size="sm"
+								variant={sasCase.status === "IN_PROGRESS" ? "default" : "outline"}
+								onClick={(e) => {
+									e.stopPropagation();
+									handleContinue(sasCase.id);
+								}}
+							>
+								{sasCase.status === "IN_PROGRESS" ? "販売を続ける" : "詳細を見る"}
+								<ArrowRight className="ml-2 h-4 w-4" />
+							</PosButton>
 						</div>
-					</div>
-				</div>
+					</PosCardContent>
+				</PosCard>
 			))}
 		</div>
 	);

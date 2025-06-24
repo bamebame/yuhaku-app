@@ -1,79 +1,178 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { SasCasesList } from "@/features/sas_cases/components/list";
 import { SasCasesListSkeleton } from "@/features/sas_cases/components/list-skeleton";
-import { PosButton } from "@/components/pos/button";
-import { Plus } from "lucide-react";
+import { SasCasesFilter, type FilterValues } from "@/features/sas_cases/components/list-filter";
+import { Pagination } from "@/components/ui/pagination";
+import { PosButton, PosTabs, PosTabsList, PosTabsTrigger, PosTabsContent } from "@/components/pos";
+import { Plus, ShoppingCart, CheckCircle, List } from "lucide-react";
 import { createEmptySasCase } from "@/features/sas_cases/actions/create-empty";
+import { format } from "date-fns";
+import type { SasCase } from "@/features/sas_cases/types";
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function SasCasesPage() {
 	const router = useRouter();
 	const [isCreating, setIsCreating] = useState(false);
-
+	const [activeTab, setActiveTab] = useState("in-progress");
+	const [page, setPage] = useState(1);
+	const [filters, setFilters] = useState<FilterValues>({});
+	
+	// タブに応じたAPIパラメータを構築
+	const buildApiUrl = useCallback(() => {
+		const params = new URLSearchParams();
+		params.append("limit", "250");
+		params.append("page", page.toString());
+		
+		if (activeTab === "in-progress") {
+			params.append("status", "IN_PROGRESS");
+		} else if (activeTab === "today-done") {
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			params.append("status", "DONE");
+			params.append("done_at_from", format(today, "yyyy-MM-dd HH:mm:ss"));
+		} else if (activeTab === "all") {
+			// フィルタ適用
+			if (filters.doneAtFrom) {
+				params.append("done_at_from", filters.doneAtFrom);
+			}
+			if (filters.doneAtTo) {
+				params.append("done_at_to", filters.doneAtTo);
+			}
+			if (filters.memberIds && filters.memberIds.length > 0) {
+				params.append("member_ids", filters.memberIds.join(","));
+			}
+		}
+		
+		return `/api/sas-cases?${params.toString()}`;
+	}, [activeTab, page, filters]);
+	
+	const { data, error, isLoading } = useSWR<{ data: SasCase[] }>(
+		buildApiUrl(),
+		fetcher,
+		{
+			refreshInterval: activeTab === "in-progress" ? 10000 : 30000, // 進行中は10秒、それ以外は30秒
+		}
+	);
+	
 	// 新規販売ケース作成
 	const handleCreateNewCase = async () => {
 		try {
 			setIsCreating(true);
 			const newCase = await createEmptySasCase();
-			// 作成されたケースの編集ページへ遷移
 			router.push(`/sas-cases/${newCase.id}`);
 		} catch (error) {
 			console.error("販売ケースの作成に失敗しました:", error);
-			// より詳細なエラー情報を表示
 			const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
 			alert(`販売ケースの作成に失敗しました。\n\nエラー: ${errorMessage}\n\nもう一度お試しください。`);
 		} finally {
 			setIsCreating(false);
 		}
 	};
-
-	// ショートカットキーの設定
-	useEffect(() => {
-		const handleKeyPress = (e: KeyboardEvent) => {
-			// F1キーで新規販売開始
-			if (e.key === "F1" && !isCreating) {
-				e.preventDefault();
-				handleCreateNewCase();
-			}
-		};
-
-		window.addEventListener("keydown", handleKeyPress);
-		return () => window.removeEventListener("keydown", handleKeyPress);
-	}, [isCreating]);
+	
+	// タブ変更時はページをリセット
+	const handleTabChange = (value: string) => {
+		setActiveTab(value);
+		setPage(1);
+	};
+	
+	// フィルタ変更時
+	const handleFilterChange = (newFilters: FilterValues) => {
+		setFilters(newFilters);
+		setPage(1);
+	};
+	
+	const cases = data?.data || [];
+	const totalPages = Math.ceil(cases.length / 250); // API側で250件制限があるため
+	
 	return (
-		<div className="p-4 max-w-7xl mx-auto">
-			{/* 大きな新規販売開始ボタン */}
-			<div className="mb-6">
+		<div className="h-full flex flex-col min-w-[1000px] p-6">
+			{/* ヘッダー */}
+			<div className="mb-6 flex items-center justify-between">
+				<h1 className="text-2xl font-bold">販売ケース一覧</h1>
 				<PosButton 
-					size="xl" 
-					className="w-full h-24 text-2xl font-bold shadow-lg"
+					size="lg" 
+					className="px-8" 
 					onClick={handleCreateNewCase}
 					disabled={isCreating}
 				>
-					<Plus className="mr-3 h-8 w-8" />
-					{isCreating ? "作成中..." : "新規販売開始"}
+					<Plus className="mr-2 h-5 w-5" />
+					新規販売開始
 				</PosButton>
 			</div>
-
-			{/* 進行中の販売ケース */}
-			<div className="bg-pos-background border-2 border-pos-border rounded-lg p-4">
-				<h2 className="text-xl font-bold mb-4 flex items-center">
-					<span className="bg-pos-foreground text-white px-3 py-1 rounded-sm mr-2 text-sm">
+			
+			{/* タブ */}
+			<PosTabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
+				<PosTabsList className="grid w-full grid-cols-3 mb-6">
+					<PosTabsTrigger value="in-progress" className="flex items-center gap-2">
+						<ShoppingCart className="h-4 w-4" />
 						進行中
-					</span>
-					販売ケース一覧
-				</h2>
-				<Suspense fallback={<SasCasesListSkeleton />}>
-					<SasCasesList />
-				</Suspense>
-			</div>
-
-			{/* ショートカットキーのヒント */}
-			<div className="mt-4 text-sm text-pos-muted text-center">
-				ヒント: F1キーで新規販売を開始できます
-			</div>
+					</PosTabsTrigger>
+					<PosTabsTrigger value="today-done" className="flex items-center gap-2">
+						<CheckCircle className="h-4 w-4" />
+						本日完了
+					</PosTabsTrigger>
+					<PosTabsTrigger value="all" className="flex items-center gap-2">
+						<List className="h-4 w-4" />
+						すべて
+					</PosTabsTrigger>
+				</PosTabsList>
+				
+				{/* 進行中タブ */}
+				<PosTabsContent value="in-progress" className="flex-1 overflow-auto">
+					{isLoading ? (
+						<SasCasesListSkeleton />
+					) : error ? (
+						<div className="text-center py-8 text-red-600">
+							エラーが発生しました
+						</div>
+					) : (
+						<SasCasesList cases={cases} />
+					)}
+				</PosTabsContent>
+				
+				{/* 本日完了タブ */}
+				<PosTabsContent value="today-done" className="flex-1 overflow-auto">
+					{isLoading ? (
+						<SasCasesListSkeleton />
+					) : error ? (
+						<div className="text-center py-8 text-red-600">
+							エラーが発生しました
+						</div>
+					) : (
+						<SasCasesList cases={cases} />
+					)}
+				</PosTabsContent>
+				
+				{/* すべてタブ */}
+				<PosTabsContent value="all" className="flex-1 overflow-auto space-y-6">
+					<SasCasesFilter onFilterChange={handleFilterChange} />
+					
+					{isLoading ? (
+						<SasCasesListSkeleton />
+					) : error ? (
+						<div className="text-center py-8 text-red-600">
+							エラーが発生しました
+						</div>
+					) : (
+						<>
+							<SasCasesList cases={cases} />
+							{totalPages > 1 && (
+								<Pagination
+									currentPage={page}
+									totalPages={totalPages}
+									onPageChange={setPage}
+									className="mt-6"
+								/>
+							)}
+						</>
+					)}
+				</PosTabsContent>
+			</PosTabs>
 		</div>
 	);
 }

@@ -3,19 +3,26 @@
 import { useState, useEffect } from "react";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { PosButton, PosCard, PosInput } from "@/components/pos";
-import { User, FileText, Search } from "lucide-react";
+import { User, FileText, Search, X } from "lucide-react";
+import { MemberSearchModal } from "@/features/members/components/search-modal";
+import useSWR from "swr";
+import type { Member } from "@/features/members/types";
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function CustomerInfoPanel() {
 	const { memberId, note, customerNote, updateMemberId, updateNote, updateCustomerNote } = useSasCaseEditStore();
 	const [memberSearchOpen, setMemberSearchOpen] = useState(false);
-	const [memberIdInput, setMemberIdInput] = useState(memberId || "");
 	const [noteInput, setNoteInput] = useState(note || "");
 	const [customerNoteInput, setCustomerNoteInput] = useState(customerNote || "");
 
-	// ストアの値が変更されたら入力値も更新
-	useEffect(() => {
-		setMemberIdInput(memberId || "");
-	}, [memberId]);
+	// 会員情報を取得
+	const { data: memberData } = useSWR<{ data: Member }>(
+		memberId ? `/api/members/${memberId}` : null,
+		fetcher
+	);
+
+	const member = memberData?.data;
 
 	useEffect(() => {
 		setNoteInput(note || "");
@@ -25,14 +32,21 @@ export function CustomerInfoPanel() {
 		setCustomerNoteInput(customerNote || "");
 	}, [customerNote]);
 
-	// TODO: 実際は会員検索APIを使用
 	const handleMemberSearch = () => {
 		setMemberSearchOpen(true);
 	};
 
-	const handleSaveCustomerInfo = () => {
-		// ストアの値を更新
-		updateMemberId(memberIdInput || null);
+	const handleMemberSelect = (memberIds: string[]) => {
+		if (memberIds.length > 0) {
+			updateMemberId(memberIds[0]);
+		}
+	};
+
+	const handleClearMember = () => {
+		updateMemberId(null);
+	};
+
+	const handleSaveNote = () => {
 		updateNote(noteInput);
 		updateCustomerNote(customerNoteInput);
 	};
@@ -56,32 +70,73 @@ export function CustomerInfoPanel() {
 							<User className="h-4 w-4" />
 							会員情報
 						</h3>
-						<div className="space-y-2">
-							<label htmlFor="member-id" className="text-pos-sm font-medium">
-								会員ID
-							</label>
-							<div className="flex gap-2">
-								<PosInput
-									id="member-id"
-									value={memberIdInput}
-									onChange={(e) => setMemberIdInput(e.target.value)}
-									onBlur={handleSaveCustomerInfo}
-									placeholder="会員IDを入力"
-								/>
+						
+						{!memberId ? (
+							<div className="space-y-3">
+								<p className="text-pos-sm text-pos-muted">
+									会員が選択されていません
+								</p>
 								<PosButton
-									size="icon"
 									variant="outline"
 									onClick={handleMemberSearch}
+									className="w-full"
 								>
-									<Search className="h-4 w-4" />
+									<Search className="mr-2 h-4 w-4" />
+									会員を検索
 								</PosButton>
 							</div>
-						</div>
-						{memberIdInput && (
-							<div className="text-pos-sm text-pos-muted space-y-1">
-								{/* TODO: 実際は会員情報を表示 */}
-								<p>会員名: テスト会員</p>
-								<p>ポイント: 1,234pt</p>
+						) : (
+							<div className="space-y-3">
+								{member ? (
+									<div className="border-2 border-pos-border p-3 bg-pos-background">
+										<div className="flex items-start justify-between">
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<span className="font-medium">{member.code}</span>
+													{member.lastName && member.firstName && (
+														<span>{member.lastName} {member.firstName}</span>
+													)}
+												</div>
+												{member.email && (
+													<p className="text-pos-sm text-pos-muted">{member.email}</p>
+												)}
+												{member.tel && (
+													<p className="text-pos-sm text-pos-muted">{member.tel}</p>
+												)}
+												<div className="flex items-center gap-4 mt-2">
+													<span className="text-pos-sm font-medium">
+														ポイント: {member.point ? `${member.point.total.toLocaleString()} pt` : "0 pt"}
+													</span>
+													<span className="text-pos-xs text-pos-muted">
+														ステータス: {member.status}
+													</span>
+												</div>
+											</div>
+											<PosButton
+												size="icon"
+												variant="ghost"
+												onClick={handleClearMember}
+												className="h-8 w-8"
+											>
+												<X className="h-4 w-4" />
+											</PosButton>
+										</div>
+									</div>
+								) : (
+									<div className="text-pos-sm text-pos-muted">
+										会員情報を読み込み中...
+									</div>
+								)}
+								
+								<PosButton
+									variant="outline"
+									size="sm"
+									onClick={handleMemberSearch}
+									className="w-full"
+								>
+									<Search className="mr-2 h-3 w-3" />
+									別の会員を検索
+								</PosButton>
 							</div>
 						)}
 					</div>
@@ -103,7 +158,7 @@ export function CustomerInfoPanel() {
 									id="staff-note"
 									value={noteInput}
 									onChange={(e) => setNoteInput(e.target.value)}
-									onBlur={handleSaveCustomerInfo}
+									onBlur={handleSaveNote}
 									placeholder="スタッフ用のメモを入力"
 									rows={3}
 									className="w-full px-3 py-2 text-pos-sm border-2 border-pos-border bg-pos-background focus:outline-none focus:ring-2 focus:ring-pos-accent"
@@ -117,7 +172,7 @@ export function CustomerInfoPanel() {
 									id="customer-note"
 									value={customerNoteInput}
 									onChange={(e) => setCustomerNoteInput(e.target.value)}
-									onBlur={handleSaveCustomerInfo}
+									onBlur={handleSaveNote}
 									placeholder="レシートに印刷されるメモを入力"
 									rows={3}
 									className="w-full px-3 py-2 text-pos-sm border-2 border-pos-border bg-pos-background focus:outline-none focus:ring-2 focus:ring-pos-accent"
@@ -127,6 +182,15 @@ export function CustomerInfoPanel() {
 					</div>
 				</PosCard>
 			</div>
+
+			{/* 会員検索モーダル */}
+			<MemberSearchModal
+				open={memberSearchOpen}
+				onOpenChange={setMemberSearchOpen}
+				selectedMemberIds={memberId ? [memberId] : []}
+				onConfirm={handleMemberSelect}
+				multiSelect={false}
+			/>
 		</div>
 	);
 }

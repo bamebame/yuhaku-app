@@ -49,6 +49,14 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -58,9 +66,12 @@ const config: Config = {
           background: "#FFFFFF",
           foreground: "#000000",
           muted: "#666666",
-          accent: "#000000",
+          accent: "#06B6D4", /* Turquoise accent */
           light: "#F5F5F5",
-          hover: "#F0F0F0",
+          hover: "#E0F2FE", /* Very light turquoise */
+          primary: "#06B6D4", /* Turquoise primary */
+          "primary-light": "#22D3EE", /* Light turquoise */
+          "primary-dark": "#0891B2", /* Dark turquoise */
         },
       },
       borderWidth: {

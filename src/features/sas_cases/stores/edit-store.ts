@@ -49,6 +49,7 @@ interface SasCaseEditStore {
 	// 初期化
 	initialize: (caseId: string, sasCase: SasCase) => void;
 	reset: () => void;
+	updateOriginalCase: (sasCase: SasCase) => void;
 
 	// カテゴリ・商品管理
 	setCategories: (categories: Category[]) => void;
@@ -90,6 +91,9 @@ interface SasCaseEditStore {
 	// 自動保存
 	triggerAutoSave: () => void;
 	cancelAutoSave: () => void;
+	
+	// 状態チェック
+	isDirty: () => boolean;
 }
 
 export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
@@ -182,6 +186,10 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			isSaving: false,
 			error: null,
 		});
+	},
+
+	updateOriginalCase: (sasCase) => {
+		set({ originalCase: sasCase });
 	},
 
 	// カテゴリ・商品管理
@@ -284,6 +292,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		};
 
 		set({ cartItems: [...cartItems, newItem], error: null });
+		console.log("[AutoSave] addToCart calling triggerAutoSave");
 		get().triggerAutoSave();
 	},
 
@@ -315,7 +324,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		if (item?.originalGoodsId) {
 			// 既存のgoodsの場合はDELETEフラグを立てる
 			const updatedItems = cartItems.map((i) =>
-				i.id === itemId ? { ...i, action: "DELETE" as const, quantity: 0 } : i,
+				i.id === itemId ? { ...i, action: "DELETE" as const } : i,
 			);
 			set({ cartItems: updatedItems });
 		} else {
@@ -391,7 +400,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 					id: item.originalGoodsId,
 					itemId: item.itemId,
 					locationId: item.locationId.toString(),
-					quantity: 0,
+					quantity: item.quantity,
 				});
 			} else if (item.action === "UPDATE" && item.originalGoodsId) {
 				// 更新
@@ -430,6 +439,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 	// 自動保存
 	triggerAutoSave: () => {
 		const state = get();
+		console.log("[AutoSave] triggerAutoSave called, caseId:", state.caseId);
 		
 		// 既存のタイマーをクリア
 		if (state.saveTimeoutId) {
@@ -439,7 +449,11 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 		// 2秒後に保存を実行
 		const timeoutId = setTimeout(async () => {
 			const { caseId, getUpdateData, setSaving } = get();
-			if (!caseId) return;
+			console.log("[AutoSave] Timer fired, caseId:", caseId);
+			if (!caseId) {
+				console.warn("[AutoSave] No caseId, skipping auto-save");
+				return;
+			}
 			
 			setSaving(true);
 			try {
@@ -472,6 +486,7 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 				}
 				
 				const result = await updateSasCaseFormAction(caseId, null, formData);
+				console.log("[AutoSave] Update result:", result);
 				
 				if (result.data) {
 					// 商品情報が不足している場合は補完
@@ -482,7 +497,26 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 						return { data: updatedCase };
 					}, false);
 					
-					set({ lastSaved: new Date(), saveTimeoutId: null });
+					// 保存成功後、カートアイテムのaction属性をクリア
+					const currentState = get();
+					const cleanedCartItems = currentState.cartItems
+						.filter(item => item.action !== "DELETE") // 削除済みアイテムを除去
+						.map(item => {
+							const { action, ...cleanItem } = item; // action属性を除去
+							return cleanItem as CartItem;
+						});
+					
+					// ストアのoriginalCaseも更新し、顧客情報も同期
+					set({ 
+						originalCase: updatedCase,
+						cartItems: cleanedCartItems,
+						memberId: updatedCase.memberId,
+						note: updatedCase.note,
+						customerNote: updatedCase.customerNote,
+						lastSaved: new Date(), 
+						saveTimeoutId: null 
+					});
+					console.log("[AutoSave] Auto-save completed successfully");
 				} else {
 					throw new Error("更新に失敗しました");
 				}
@@ -503,5 +537,42 @@ export const useSasCaseEditStore = create<SasCaseEditStore>((set, get) => ({
 			clearTimeout(saveTimeoutId);
 			set({ saveTimeoutId: null });
 		}
+	},
+	
+	// dirty状態をチェック
+	isDirty: () => {
+		const { originalCase, cartItems, memberId, note, customerNote } = get();
+		if (!originalCase) return false;
+		
+		// カートに実際の変更があるかチェック
+		// action属性がないアイテムは既存のもので変更なしとして扱う
+		const hasCartChanges = cartItems.some(item => 
+			item.action === "CREATE" || item.action === "UPDATE" || item.action === "DELETE"
+		);
+		
+		// 顧客情報に変更があるかチェック（null と空文字列、undefinedを同一視）
+		const normalizeValue = (value: string | null | undefined) => value || "";
+		const memberIdChanged = normalizeValue(originalCase.memberId) !== normalizeValue(memberId);
+		const noteChanged = normalizeValue(originalCase.note) !== normalizeValue(note);
+		const customerNoteChanged = normalizeValue(originalCase.customerNote) !== normalizeValue(customerNote);
+		
+		const isDirtyResult = hasCartChanges || memberIdChanged || noteChanged || customerNoteChanged;
+		
+		console.log("[isDirty] Debug:", {
+			isDirtyResult,
+			hasCartChanges,
+			memberIdChanged,
+			noteChanged,
+			customerNoteChanged,
+			cartItemsWithActions: cartItems.filter(item => item.action).map(item => ({ id: item.id, action: item.action })),
+			originalMemberId: originalCase.memberId,
+			currentMemberId: memberId,
+			originalNote: originalCase.note,
+			currentNote: note,
+			originalCustomerNote: originalCase.customerNote,
+			currentCustomerNote: customerNote,
+		});
+		
+		return isDirtyResult;
 	},
 }));

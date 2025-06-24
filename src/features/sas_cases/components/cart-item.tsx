@@ -2,7 +2,7 @@
 
 import { PosButton, PosInput } from "@/components/pos";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
-import { Plus, Minus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Minus, Trash2, Edit2, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import type { CartItem as CartItemType } from "@/features/sas_cases/stores/edit-store";
 
@@ -11,9 +11,14 @@ interface CartItemProps {
 }
 
 export function CartItem({ item }: CartItemProps) {
-	const { updateQuantity, removeFromCart, updateUnitAdjustment } = useSasCaseEditStore();
+	const { updateQuantity, removeFromCart, updateUnitAdjustment, productStocks } = useSasCaseEditStore();
 	const [isEditingPrice, setIsEditingPrice] = useState(false);
 	const [adjustmentInput, setAdjustmentInput] = useState(item.unitAdjustment.toString());
+
+	// 在庫情報を取得
+	const stocks = productStocks.get(item.productId) || [];
+	const availableStock = stocks.find(stock => stock.itemId === item.itemId)?.quantity || 0;
+	const isOverStock = item.quantity > availableStock;
 
 	const handleIncrement = () => {
 		updateQuantity(item.id, item.quantity + 1);
@@ -54,11 +59,18 @@ export function CartItem({ item }: CartItemProps) {
 						<p className="text-pos-xs text-pos-muted">
 							{item.product.code || `在庫ID: ${item.productId}`}
 						</p>
+						{/* 在庫警告 */}
+						{isOverStock && (
+							<div className="flex items-center gap-1 mt-1 text-red-600 text-pos-xs">
+								<AlertTriangle className="h-3 w-3" />
+								<span>在庫不足（残り{availableStock}個）</span>
+							</div>
+						)}
 					</div>
 					<PosButton
 						variant="ghost"
 						size="icon"
-						className="h-8 w-8 text-pos-muted hover:text-destructive"
+						className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
 						onClick={handleRemove}
 					>
 						<Trash2 className="h-4 w-4" />
@@ -137,7 +149,7 @@ export function CartItem({ item }: CartItemProps) {
 						>
 							<Minus className="h-3 w-3" />
 						</PosButton>
-						<span className="w-12 text-center font-medium text-pos-base">
+						<span className={`w-12 text-center font-medium text-pos-base ${isOverStock ? "text-red-600" : ""}`}>
 							{item.quantity}
 						</span>
 						<PosButton
@@ -145,6 +157,8 @@ export function CartItem({ item }: CartItemProps) {
 							size="icon"
 							className="h-8 w-8"
 							onClick={handleIncrement}
+							disabled={item.quantity >= availableStock}
+							title={item.quantity >= availableStock ? `在庫上限: ${availableStock}個` : ""}
 						>
 							<Plus className="h-3 w-3" />
 						</PosButton>

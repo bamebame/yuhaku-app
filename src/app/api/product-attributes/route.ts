@@ -3,6 +3,7 @@ import { createServerContext } from "@/lib/context/server-context";
 import { ProductsClient } from "@/lib/recore/products";
 import { apiResponse } from "@/app/api/_utils/response";
 import type { ProductAttribute } from "@/lib/recore/product-attributes";
+import type { Product } from "@/features/products/types";
 
 /**
  * 商品属性一覧を取得
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
 		console.log("[ProductAttributes] Fetching products to extract attributes");
 		
 		// 商品を取得（少ない数から試す）
-		let products;
+		let products: Product[] = [];
 		try {
 			products = await productsClient.list({ limit: 100 });
 		} catch (error) {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 		];
 		
 		// 各商品から属性値を抽出
-		products.forEach(product => {
+		products.forEach((product: Product) => {
 			if (product.attribute) {
 				attributeNames.forEach(attrName => {
 					const value = product.attribute[attrName as keyof typeof product.attribute];

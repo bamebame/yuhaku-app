@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { PosButton } from "@/components/pos";
 import { Save, CheckCircle, ShoppingCart, Check, AlertCircle } from "lucide-react";
@@ -12,6 +13,7 @@ import { CheckoutDialog, type PaymentData } from "./checkout-dialog";
 import { fetchMissingProductsForCase } from "@/features/sas_cases/helpers/fetch-missing-products";
 
 export function SasCaseEditHeader() {
+	const router = useRouter();
 	const { toast } = useToast();
 	const [isSaving, setIsSaving] = useState(false);
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -115,13 +117,10 @@ export function SasCaseEditHeader() {
 
 			const result = await checkoutSasCaseFormAction(caseId, null, formData);
 
-			if (result.result.status === "success") {
-				toast({
-					title: "完了しました",
-					description: "販売を完了しました",
-				});
-				// 一覧画面に戻る
-				window.location.href = "/sas-cases";
+			if (result.result.status === "success" && result.data) {
+				// ページをリロードしてサマリーを表示
+				await mutate(`/api/sas-cases/${caseId}`);
+				router.refresh();
 			} else {
 				throw new Error("チェックアウトに失敗しました");
 			}
@@ -131,7 +130,6 @@ export function SasCaseEditHeader() {
 				description: "チェックアウトに失敗しました",
 				variant: "destructive",
 			});
-		} finally {
 			setIsCheckingOut(false);
 			setShowCheckoutDialog(false);
 		}

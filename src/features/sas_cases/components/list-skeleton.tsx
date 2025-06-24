@@ -1,59 +1,47 @@
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+import { PosCard, PosCardHeader, PosCardContent } from "@/components/pos";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function SasCasesListSkeleton() {
 	return (
-		<div className="rounded-md border">
-			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>コード</TableHead>
-						<TableHead>ステータス</TableHead>
-						<TableHead>店舗</TableHead>
-						<TableHead>スタッフ</TableHead>
-						<TableHead className="text-right">合計金額</TableHead>
-						<TableHead>作成日時</TableHead>
-						<TableHead className="text-right">アクション</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{[...Array(5)].map((_, i) => (
-						<TableRow key={`row-${i}`}>
-							<TableCell>
-								<Skeleton className="h-4 w-24" />
-							</TableCell>
-							<TableCell>
+		<div className="grid gap-4 grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+			{[...Array(12)].map((_, i) => (
+				<PosCard key={i} className="min-w-[200px]">
+					<PosCardHeader className="pb-3">
+						<div className="flex justify-between items-start">
+							<div>
+								<Skeleton className="h-6 w-24 mb-2" />
 								<Skeleton className="h-5 w-16" />
-							</TableCell>
-							<TableCell>
+							</div>
+							<Skeleton className="h-5 w-5 rounded-full" />
+						</div>
+					</PosCardHeader>
+					<PosCardContent>
+						<div className="space-y-3">
+							<div className="flex items-center gap-2">
+								<Skeleton className="h-4 w-4 rounded-full" />
 								<Skeleton className="h-4 w-20" />
-							</TableCell>
-							<TableCell>
-								<Skeleton className="h-4 w-24" />
-							</TableCell>
-							<TableCell className="text-right">
-								<Skeleton className="h-4 w-20 ml-auto" />
-							</TableCell>
-							<TableCell>
+							</div>
+							<div className="flex items-center gap-2">
+								<Skeleton className="h-4 w-4 rounded-full" />
 								<Skeleton className="h-4 w-32" />
-							</TableCell>
-							<TableCell>
-								<div className="flex justify-end gap-2">
-									<Skeleton className="h-8 w-8" />
-									<Skeleton className="h-8 w-8" />
+							</div>
+							<div className="flex justify-between items-center pt-2">
+								<div>
+									<Skeleton className="h-3 w-12 mb-1" />
+									<Skeleton className="h-5 w-8" />
 								</div>
-							</TableCell>
-						</TableRow>
-					))}
-				</TableBody>
-			</Table>
+								<div>
+									<Skeleton className="h-3 w-12 mb-1" />
+									<Skeleton className="h-5 w-16" />
+								</div>
+							</div>
+							<div className="flex justify-end mt-4">
+								<Skeleton className="h-8 w-28" />
+							</div>
+						</div>
+					</PosCardContent>
+				</PosCard>
+			))}
 		</div>
 	);
 }

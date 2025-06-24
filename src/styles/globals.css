@@ -10,20 +10,26 @@
     --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
-    --primary: 0 0% 0%;
+    --primary: 187 78% 46%; /* Turquoise Blue #06B6D4 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 187 20% 96%; /* Very light turquoise */
+    --secondary-foreground: 187 78% 36%; /* Darker turquoise */
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 40%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --accent: 187 78% 46%; /* Same as primary */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 65%; /* Coral Pink #FF6B6B */
+    --destructive-foreground: 0 0% 100%;
     --border: 0 0% 0%;
     --input: 0 0% 0%;
-    --ring: 0 0% 0%;
+    --ring: 187 78% 46%; /* Turquoise for focus states */
     --radius: 0rem;
+    
+    /* Additional semantic colors */
+    --success: 158 64% 42%; /* Emerald Green #10B981 */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%; /* Amber #F59E0B */
+    --warning-foreground: 0 0% 0%;
   }
 
   .dark {
@@ -33,19 +39,25 @@
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
+    --primary: 187 91% 56%; /* Brighter turquoise for dark mode */
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 187 30% 20%; /* Dark turquoise */
+    --secondary-foreground: 187 91% 76%; /* Light turquoise */
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 20%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --accent: 187 91% 56%; /* Same as primary */
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 72% 65%; /* Keep coral pink */
+    --destructive-foreground: 0 0% 100%;
     --border: 0 0% 100%;
     --input: 0 0% 100%;
-    --ring: 0 0% 100%;
+    --ring: 187 91% 56%; /* Turquoise for focus states */
+    
+    /* Additional semantic colors for dark mode */
+    --success: 158 64% 52%; /* Brighter emerald */
+    --success-foreground: 0 0% 0%;
+    --warning: 38 92% 60%; /* Brighter amber */
+    --warning-foreground: 0 0% 0%;
   }
 }
 

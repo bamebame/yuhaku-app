@@ -271,6 +271,7 @@ export function convertSasCaseSearchParamsToRecore(
 		ids: params.ids?.map((id) => Number.parseInt(id)),
 		codes: params.codes,
 		statuses: params.statuses,
+		member_ids: params.memberIds?.map((id) => Number.parseInt(id)),
 		created_at_from: params.createdAtFrom
 			? formatDate(params.createdAtFrom)
 			: undefined,

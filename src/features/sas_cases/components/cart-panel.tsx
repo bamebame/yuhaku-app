@@ -25,7 +25,7 @@ import { PrinterSettingsDialog } from "@/features/receipt/components";
 export function CartPanel() {
 	const router = useRouter();
 	const { toast } = useToast();
-	const { caseId, cartItems, originalCase, updateCaseAdjustment } = useSasCaseEditStore();
+	const { caseId, cartItems, originalCase, updateCaseAdjustment, isSaving, isDirty } = useSasCaseEditStore();
 	const [isEditingCaseAdjustment, setIsEditingCaseAdjustment] = useState(false);
 	const [caseAdjustmentInput, setCaseAdjustmentInput] = useState("0");
 	const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
@@ -61,6 +61,9 @@ export function CartPanel() {
 	const caseAdjustment = summary?.caseAdjustment || 0;
 	const couponAdjustment = summary?.couponAdjustment || 0;
 	const total = summary?.total || (subtotal + adjustmentTotal + caseAdjustment + couponAdjustment);
+
+	// dirty状態をチェック
+	const isDirtyValue = isDirty();
 
 	const handleCaseAdjustmentSave = () => {
 		const adjustment = parseInt(caseAdjustmentInput) || 0;
@@ -257,7 +260,7 @@ export function CartPanel() {
 						</div>
 					</div>
 				) : (
-					<div className="divide-y divide-pos-border">
+					<div className="divide-y divide-pos-border border-b border-pos-border">
 						{visibleItems.map((item) => (
 							<CartItem key={item.id} item={item} />
 						))}
@@ -269,12 +272,37 @@ export function CartPanel() {
 			<div className="mt-auto border-t-2 border-pos-border bg-pos-background">
 				<div className="p-4 space-y-2">
 					<div className="flex justify-between text-sm">
+						<span>商品点数</span>
+						<span>{visibleItems.reduce((sum, item) => sum + item.quantity, 0)}点</span>
+					</div>
+
+					<div className="flex justify-between text-sm">
 						<span>小計</span>
 						<span>¥{subtotal.toLocaleString()}</span>
 					</div>
 
+					<div className="flex justify-between text-sm">
+						<span>クーポン割引</span>
+						<span className={couponAdjustment !== 0 ? "text-red-600" : ""}>¥{couponAdjustment.toLocaleString()}</span>
+					</div>
+
 					<div className="flex justify-between items-center text-sm">
-						<span>ケース調整</span>
+						<div className="flex items-center gap-1">
+							<span>ケース調整</span>
+							{!isEditingCaseAdjustment && (
+								<PosButton
+									size="icon"
+									variant="ghost"
+									className="h-6 w-6"
+									onClick={() => {
+										setCaseAdjustmentInput(caseAdjustment.toString());
+										setIsEditingCaseAdjustment(true);
+									}}
+								>
+									<Edit2 className="h-3 w-3" />
+								</PosButton>
+							)}
+						</div>
 						{isEditingCaseAdjustment ? (
 							<div className="flex items-center gap-1">
 								<PosInput
@@ -306,31 +334,11 @@ export function CartPanel() {
 								</PosButton>
 							</div>
 						) : (
-							<div className="flex items-center gap-1">
-								<span className={caseAdjustment < 0 ? "text-red-600" : ""}>
-									¥{caseAdjustment.toLocaleString()}
-								</span>
-								<PosButton
-									size="icon"
-									variant="ghost"
-									className="h-6 w-6"
-									onClick={() => {
-										setCaseAdjustmentInput(caseAdjustment.toString());
-										setIsEditingCaseAdjustment(true);
-									}}
-								>
-									<Edit2 className="h-3 w-3" />
-								</PosButton>
-							</div>
+							<span className={caseAdjustment < 0 ? "text-red-600" : ""}>
+								¥{caseAdjustment.toLocaleString()}
+							</span>
 						)}
 					</div>
-
-					{couponAdjustment !== 0 && (
-						<div className="flex justify-between text-sm">
-							<span>クーポン割引</span>
-							<span className="text-red-600">¥{couponAdjustment.toLocaleString()}</span>
-						</div>
-					)}
 
 					{/* 税額表示 */}
 					{summary?.taxes && summary.taxes.length > 0 && (
@@ -362,10 +370,10 @@ export function CartPanel() {
 				<div className="p-4 pt-0">
 					<PosButton
 						className="w-full h-14 text-pos-lg font-bold"
-						disabled={visibleItems.length === 0 || total === 0}
+						disabled={visibleItems.length === 0 || total === 0 || isSaving || isDirtyValue}
 						onClick={() => setShowCheckoutDialog(true)}
 					>
-						決済へ進む
+						{isSaving ? "保存中..." : isDirtyValue ? "未保存の変更があります" : "決済へ進む"}
 					</PosButton>
 				</div>
 			</div>
