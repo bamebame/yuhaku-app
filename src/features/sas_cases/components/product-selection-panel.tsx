@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo } from "react";
-import useSWR from "swr";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { useFilterStore } from "@/features/sas_cases/stores/filter-store";
 import { SearchBar } from "./filter/search-bar";
@@ -10,17 +9,11 @@ import { FilterContent } from "./filter/filter-content";
 import { ProductGrid } from "./product-grid";
 import { ProductCard } from "./product-card";
 import { useCachedProducts, useCachedCategories } from "@/lib/cache";
+import { useBatchItems } from "@/features/sas_cases/hooks/use-batch-items";
 import type { Category } from "@/features/categories/types";
 import type { Product } from "@/features/products/types";
 import type { Item, ItemStock } from "@/features/items/types";
 
-const fetcher = async (url: string) => {
-	const response = await fetch(url);
-	if (!response.ok) {
-		throw new Error("Failed to fetch");
-	}
-	return response.json();
-};
 
 export function ProductSelectionPanel() {
 	const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -46,14 +39,14 @@ export function ProductSelectionPanel() {
 	const { categories: cachedCategories, isLoading: categoriesLoading } = useCachedCategories();
 	const { products: cachedProducts, isLoading: productsLoading } = useCachedProducts();
 
-	// すべての商品の在庫を取得（初回起動時に在庫データを確実に取得するため）
-	const allProductIds = storeProducts?.map((p) => p.id).join(",") || "";
-	const { data: itemsResponse } = useSWR<{ data: Item[] }>(
-		allProductIds ? `/api/items?product_ids=${allProductIds}` : null,
-		fetcher,
+	// すべての商品の在庫を取得（250件ずつのバッチ処理）
+	const allProductIds = storeProducts?.map((p) => p.id) || [];
+	const { data: items, isLoading: isLoadingItems, error: itemsError } = useBatchItems(
+		allProductIds,
 		{
 			refreshInterval: 30000, // 30秒
-		},
+			enabled: allProductIds.length > 0,
+		}
 	);
 
 	// カテゴリデータをストアに保存
@@ -78,13 +71,13 @@ export function ProductSelectionPanel() {
 
 	// 在庫データをストアに保存
 	useEffect(() => {
-		const itemsJson = JSON.stringify(itemsResponse?.data || []);
-		if (itemsJson !== prevItemsRef.current && itemsResponse?.data?.length) {
+		const itemsJson = JSON.stringify(items || []);
+		if (itemsJson !== prevItemsRef.current && items?.length) {
 			prevItemsRef.current = itemsJson;
 			
 			// productIdごとに在庫をグループ化
 			const stocksByProductId = new Map<string, Item[]>();
-			itemsResponse.data.forEach((item) => {
+			items.forEach((item) => {
 				const existing = stocksByProductId.get(item.productId) || [];
 				stocksByProductId.set(item.productId, [...existing, item]);
 			});
@@ -105,7 +98,7 @@ export function ProductSelectionPanel() {
 				setProductStocks(productId, allStocks);
 			});
 		}
-	}, [itemsResponse, setProductStocks]);
+	}, [items, setProductStocks]);
 
 	// フィルタリング処理
 	const filteredProducts = useMemo(() => {
@@ -252,6 +245,20 @@ export function ProductSelectionPanel() {
 			
 			{/* フィルターコンテンツ */}
 			{activeTab && <FilterContent />}
+			
+			{/* 在庫データ取得中の表示 */}
+			{isLoadingItems && allProductIds.length > 0 && (
+				<div className="bg-pos-light border-b border-pos-border px-4 py-2 text-sm text-pos-muted">
+					在庫情報を取得中... ({allProductIds.length}件の商品)
+				</div>
+			)}
+			
+			{/* 在庫データ取得エラーの表示 */}
+			{itemsError && (
+				<div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-600">
+					在庫情報の取得に失敗しました: {itemsError.message}
+				</div>
+			)}
 			
 			{/* 商品表示エリア */}
 			<div className="flex-1 overflow-y-auto">
