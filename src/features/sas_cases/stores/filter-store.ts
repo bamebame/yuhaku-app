@@ -40,7 +40,7 @@ const initialState: FilterState = {
 	priceRange: null,
 	searchKeyword: '',
 	activeTab: null,
-	showInStockOnly: false,
+	showInStockOnly: true,
 };
 
 export const useFilterStore = create<FilterStore>()(
