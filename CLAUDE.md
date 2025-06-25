@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - @.claude/project-knowledge.md - 技術的な知見とトラブルシューティング
 - @.claude/project-improvements.md - 改善履歴とバージョン管理
 - @.claude/common-patterns.md - よく使うコードパターンとテンプレート
+- @.claude/development-workflow.md - 開発タスクの標準ワークフロー
 
 ### Custom Commands
 - `/init` - プロジェクトコンテキストの再読み込み
@@ -374,6 +375,17 @@ export function SasCaseForm({ caseId }: { caseId: string }) {
   )
 }
 ```
+
+## Development Workflow
+
+開発タスクの標準的なワークフローは @.claude/development-workflow.md を参照してください。
+
+主な内容:
+- タスク管理（TodoList活用）
+- 調査・探索フェーズ（gitingest.com、Context7 MCP）
+- 実装フェーズ
+- 品質保証フェーズ
+- 開発サーバー管理
 
 ## Troubleshooting
 
