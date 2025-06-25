@@ -46,10 +46,10 @@ export function ProductSelectionPanel() {
 	const { categories: cachedCategories, isLoading: categoriesLoading } = useCachedCategories();
 	const { products: cachedProducts, isLoading: productsLoading } = useCachedProducts();
 
-	// 表示中の商品の在庫を取得
-	const productIds = displayedProducts.map((p) => p.id).join(",");
+	// すべての商品の在庫を取得（初回起動時に在庫データを確実に取得するため）
+	const allProductIds = storeProducts?.map((p) => p.id).join(",") || "";
 	const { data: itemsResponse } = useSWR<{ data: Item[] }>(
-		productIds ? `/api/items?product_ids=${productIds}` : null,
+		allProductIds ? `/api/items?product_ids=${allProductIds}` : null,
 		fetcher,
 		{
 			refreshInterval: 30000, // 30秒
@@ -189,18 +189,30 @@ export function ProductSelectionPanel() {
 		if (searchKeyword) {
 			const keyword = searchKeyword.toLowerCase();
 			filtered = filtered.filter((product) => {
-				return (
+				// 基本フィールドの検索
+				if (
 					product.title.toLowerCase().includes(keyword) ||
 					product.code.toLowerCase().includes(keyword) ||
-					product.aliasCode?.toLowerCase().includes(keyword) ||
-					product.attribute?.custom_description?.toLowerCase().includes(keyword) ||
-					product.attribute?.custom_series?.toLowerCase().includes(keyword)
-				);
+					product.aliasCode?.toLowerCase().includes(keyword)
+				) {
+					return true;
+				}
+				
+				// attribute配下の全ての値を検索
+				if (product.attribute) {
+					for (const value of Object.values(product.attribute)) {
+						if (value && typeof value === 'string' && value.toLowerCase().includes(keyword)) {
+							return true;
+						}
+					}
+				}
+				
+				return false;
 			});
 		}
 
-		// 在庫ありのみフィルタ
-		if (showInStockOnly) {
+		// 在庫ありのみフィルタ（在庫データが読み込まれている場合のみ適用）
+		if (showInStockOnly && productStocks.size > 0) {
 			filtered = filtered.filter((product) => {
 				const stocks = productStocks.get(product.id) || [];
 				const totalStock = stocks.reduce((sum, stock) => sum + stock.quantity, 0);
