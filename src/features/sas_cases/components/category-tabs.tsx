@@ -58,7 +58,7 @@ export function CategoryTabs() {
 
 	return (
 		<div className="border-b-2 border-pos-border">
-			<div className="w-full">
+			<div className="w-full max-h-[400px] overflow-y-auto">
 				<div className="flex flex-wrap p-2 gap-2">
 					<button
 						type="button"

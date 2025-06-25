@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { useMemo } from "react";
+import { Check } from "lucide-react";
 import { useFilterStore } from "../../stores/filter-store";
 import { useSasCaseEditStore } from "../../stores/edit-store";
 import { useProductAttributes } from "../../hooks/useProductAttributes";
@@ -20,7 +20,6 @@ export function SeriesFilter() {
 	} = useFilterStore();
 	const { products } = useSasCaseEditStore();
 	const { series: availableSeriesFromAPI, isLoading } = useProductAttributes();
-	const [showOthers, setShowOthers] = useState(false);
 	
 	// シリーズ別の商品数を計算
 	const seriesStats = useMemo(() => {
@@ -49,9 +48,12 @@ export function SeriesFilter() {
 		return availableSeriesFromAPI.filter(series => seriesStats.has(series));
 	}, [availableSeriesFromAPI, seriesStats]);
 	
-	// 人気シリーズとその他に分類
-	const popularSeriesList = POPULAR_SERIES.filter((s) => seriesStats.has(s));
-	const otherSeries = allSeries.filter((s) => !POPULAR_SERIES.includes(s));
+	// すべてのシリーズを一つのリストに（人気シリーズを先頭に配置）
+	const sortedSeries = useMemo(() => {
+		const popular = POPULAR_SERIES.filter((s) => seriesStats.has(s));
+		const others = allSeries.filter((s) => !POPULAR_SERIES.includes(s));
+		return [...popular, ...others];
+	}, [allSeries, seriesStats]);
 	
 	// 複数フィルターが選択されているか確認
 	const hasMultipleFilters = 
@@ -89,41 +91,15 @@ export function SeriesFilter() {
 	};
 	
 	return (
-		<div className="p-4 space-y-4">
-			{/* 人気シリーズ */}
-			{popularSeriesList.length > 0 && (
-				<div>
-					<h3 className="text-sm font-semibold mb-3">人気シリーズ</h3>
+		<div className="p-4">
+			{/* すべてのシリーズを表示 */}
+			{sortedSeries.length > 0 && (
+				<div className="max-h-[400px] overflow-y-auto">
 					<div className="grid grid-cols-4 gap-3">
-						{popularSeriesList.map((series) => (
+						{sortedSeries.map((series) => (
 							<SeriesCard key={series} series={series} />
 						))}
 					</div>
-				</div>
-			)}
-			
-			{/* その他のシリーズ */}
-			{otherSeries.length > 0 && (
-				<div>
-					<button
-						onClick={() => setShowOthers(!showOthers)}
-						className="flex items-center gap-2 text-sm font-semibold mb-3 hover:text-pos-muted"
-					>
-						その他のシリーズ ({otherSeries.length})
-						{showOthers ? (
-							<ChevronUp className="h-4 w-4" />
-						) : (
-							<ChevronDown className="h-4 w-4" />
-						)}
-					</button>
-					
-					{showOthers && (
-						<div className="grid grid-cols-4 gap-3">
-							{otherSeries.map((series) => (
-								<SeriesCard key={series} series={series} />
-							))}
-						</div>
-					)}
 				</div>
 			)}
 			
@@ -133,7 +109,7 @@ export function SeriesFilter() {
 				</div>
 			)}
 			
-			{!isLoading && allSeries.length === 0 && (
+			{!isLoading && sortedSeries.length === 0 && (
 				<div className="text-center py-8 text-pos-muted">
 					シリーズ情報がありません
 				</div>

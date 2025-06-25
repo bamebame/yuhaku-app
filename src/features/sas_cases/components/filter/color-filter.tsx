@@ -112,43 +112,14 @@ export function ColorFilter() {
 	const otherColorsCount = definedOtherColors.length + undefinedColors.length;
 	
 	return (
-		<div className="p-4 space-y-4">
-			{/* メイン色 */}
-			{mainColors.length > 0 && (
-				<div>
-					<h3 className="text-sm font-semibold mb-3">メイン色</h3>
-					<div className="grid grid-cols-8 gap-2">
-						{mainColors.map((color) => (
-							<ColorItem
-								key={color.code}
-								code={color.code}
-								name={color.name}
-								hex={color.hex}
-							/>
-						))}
-					</div>
-				</div>
-			)}
-			
-			{/* その他の色 */}
-			{otherColorsCount > 0 && (
-				<div>
-					<button
-						onClick={() => setShowOthers(!showOthers)}
-						className="flex items-center gap-2 text-sm font-semibold mb-3 hover:text-pos-muted"
-					>
-						その他の色 ({otherColorsCount})
-						{showOthers ? (
-							<ChevronUp className="h-4 w-4" />
-						) : (
-							<ChevronDown className="h-4 w-4" />
-						)}
-					</button>
-					
-					{showOthers && (
+		<div className="p-4">
+			<div className="max-h-[400px] overflow-y-auto space-y-4">
+				{/* メイン色 */}
+				{mainColors.length > 0 && (
+					<div>
+						<h3 className="text-sm font-semibold mb-3">メイン色</h3>
 						<div className="grid grid-cols-8 gap-2">
-							{/* 定義されているその他の色 */}
-							{definedOtherColors.map((color) => (
+							{mainColors.map((color) => (
 								<ColorItem
 									key={color.code}
 									code={color.code}
@@ -156,19 +127,50 @@ export function ColorFilter() {
 									hex={color.hex}
 								/>
 							))}
-							{/* 未定義の色 */}
-							{undefinedColors.map((code) => (
-								<ColorItem
-									key={code}
-									code={code}
-									name={code}
-									hex="#E5E7EB"
-								/>
-							))}
 						</div>
-					)}
-				</div>
-			)}
+					</div>
+				)}
+				
+				{/* その他の色 */}
+				{otherColorsCount > 0 && (
+					<div>
+						<button
+							onClick={() => setShowOthers(!showOthers)}
+							className="flex items-center gap-2 text-sm font-semibold mb-3 hover:text-pos-muted"
+						>
+							その他の色 ({otherColorsCount})
+							{showOthers ? (
+								<ChevronUp className="h-4 w-4" />
+							) : (
+								<ChevronDown className="h-4 w-4" />
+							)}
+						</button>
+						
+						{showOthers && (
+							<div className="grid grid-cols-8 gap-2">
+								{/* 定義されているその他の色 */}
+								{definedOtherColors.map((color) => (
+									<ColorItem
+										key={color.code}
+										code={color.code}
+										name={color.name}
+										hex={color.hex}
+									/>
+								))}
+								{/* 未定義の色 */}
+								{undefinedColors.map((code) => (
+									<ColorItem
+										key={code}
+										code={code}
+										name={code}
+										hex="#E5E7EB"
+									/>
+								))}
+							</div>
+						)}
+					</div>
+				)}
+			</div>
 			
 			{isLoading && (
 				<div className="text-center py-8 text-pos-muted">

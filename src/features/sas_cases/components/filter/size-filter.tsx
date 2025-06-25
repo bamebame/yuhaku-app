@@ -83,9 +83,9 @@ export function SizeFilter() {
 	
 	return (
 		<div className="p-4">
-			<div className="mb-4">
-				<h3 className="text-sm font-semibold mb-3">サイズを選択</h3>
-				<div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
+			<h3 className="text-sm font-semibold mb-3">サイズを選択</h3>
+			<div className="max-h-[400px] overflow-y-auto">
+				<div className="space-y-2">
 					{sortedSizes.map((size) => {
 						const count = sizeStats.get(size) || 0;
 						const isSelected = selectedSizes.includes(size);
@@ -96,27 +96,25 @@ export function SizeFilter() {
 								onClick={() => toggleSize(size)}
 								disabled={count === 0}
 								className={cn(
-									"relative p-2 text-sm font-medium border-2 border-pos-border transition-all",
+									"w-full flex items-center justify-between p-3 text-sm font-medium border-2 border-pos-border transition-all",
 									"hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed",
 									isSelected
 										? "bg-pos-primary text-white border-pos-primary"
 										: "bg-white hover:bg-pos-hover disabled:hover:bg-white"
 								)}
 							>
-								{isSelected && (
-									<div className="absolute top-0.5 right-0.5">
-										<Check className="h-3 w-3" />
-									</div>
-								)}
-								<div>{size}</div>
-								{!hasMultipleFilters && (
-									<div className={cn(
-										"text-xs mt-0.5",
-										isSelected ? "text-white/80" : "text-pos-muted"
-									)}>
-										({count})
-									</div>
-								)}
+								<div className="flex items-center gap-2">
+									<span>{size}</span>
+									{!hasMultipleFilters && (
+										<span className={cn(
+											"text-xs",
+											isSelected ? "text-white/80" : "text-pos-muted"
+										)}>
+											({count})
+										</span>
+									)}
+								</div>
+								{isSelected && <Check className="h-4 w-4" />}
 							</button>
 						);
 					})}

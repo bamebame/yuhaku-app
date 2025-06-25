@@ -81,10 +81,11 @@ export function PriceFilter() {
 	};
 	
 	return (
-		<div className="p-4 space-y-4">
-			<div>
-				<h3 className="text-sm font-semibold mb-3">価格帯を選択</h3>
-				<div className="space-y-2">
+		<div className="p-4">
+			<div className="max-h-[400px] overflow-y-auto space-y-4">
+				<div>
+					<h3 className="text-sm font-semibold mb-3">価格帯を選択</h3>
+					<div className="space-y-2">
 					{PRICE_RANGES.map((range) => {
 						const count = priceStats.get(range.label) || 0;
 						const isSelected = priceRange?.label === range.label;
@@ -161,6 +162,7 @@ export function PriceFilter() {
 						クリア
 					</button>
 				</div>
+			</div>
 			</div>
 		</div>
 	);
