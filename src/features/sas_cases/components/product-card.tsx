@@ -157,7 +157,7 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 	return (
 		<>
 		<PosCard 
-			className="relative p-3 flex flex-col gap-2 hover:bg-pos-hover transition-colors cursor-pointer"
+			className="relative flex flex-col hover:bg-pos-hover transition-colors cursor-pointer overflow-hidden"
 			onClick={() => setShowDetailDialog(true)}
 		>
 			{/* お気に入りボタン */}
@@ -179,7 +179,7 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 			</button>
 			
 			{/* 商品画像 */}
-			<div className="aspect-square bg-pos-light border-2 border-pos-border flex items-center justify-center overflow-hidden">
+			<div className="aspect-square bg-pos-light border-b-2 border-pos-border flex items-center justify-center overflow-hidden">
 				{product.imageUrls && product.imageUrls.length > 0 ? (
 					<img
 						src={product.imageUrls[0]}
@@ -192,33 +192,35 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 			</div>
 
 			{/* 商品情報 */}
-			<div className="flex-1 flex flex-col">
-				<h3 className="font-medium text-pos-sm line-clamp-2">{product.title}</h3>
-				<p className="text-pos-xs text-pos-muted">{product.code}</p>
-			</div>
-
-			{/* 価格と在庫 */}
-			<div className="space-y-1">
-				<div className="flex items-center justify-between">
-					<span className="text-pos-base font-bold">
-						¥{defaultPrice.toLocaleString()}
-					</span>
-					<span className={`text-pos-xs ${hasStock ? "" : "text-destructive"}`}>
-						在庫: {totalStock}
-					</span>
+			<div className="p-3 flex-1 flex flex-col gap-2">
+				<div className="flex-1 flex flex-col">
+					<h3 className="font-medium text-pos-sm line-clamp-2">{product.title}</h3>
+					<p className="text-pos-xs text-pos-muted">{product.code}</p>
 				</div>
 
-				{/* カートへ追加ボタン */}
-				<PosButton
-					className="w-full"
-					size="sm"
-					onClick={handleAddToCart}
-					disabled={!hasStock || isAdding}
-					variant={hasStock ? "default" : "secondary"}
-				>
-					<Plus className="mr-1 h-3 w-3" />
-					{hasStock ? "カートへ" : "在庫なし"}
-				</PosButton>
+				{/* 価格と在庫 */}
+				<div className="space-y-1">
+					<div className="flex items-center justify-between">
+						<span className="text-pos-base font-bold">
+							¥{defaultPrice.toLocaleString()}
+						</span>
+						<span className={`text-pos-xs ${hasStock ? "" : "text-destructive"}`}>
+							在庫: {totalStock}
+						</span>
+					</div>
+
+					{/* カートへ追加ボタン */}
+					<PosButton
+						className="w-full"
+						size="sm"
+						onClick={handleAddToCart}
+						disabled={!hasStock || isAdding}
+						variant={hasStock ? "default" : "secondary"}
+					>
+						<Plus className="mr-1 h-3 w-3" />
+						{hasStock ? "カートへ" : "在庫なし"}
+					</PosButton>
+				</div>
 			</div>
 
 		</PosCard>

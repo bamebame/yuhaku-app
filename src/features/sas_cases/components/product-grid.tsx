@@ -119,7 +119,7 @@ export function ProductGrid({ products }: ProductGridProps) {
 			{/* 商品グリッド */}
 			<div className="flex-1 overflow-y-auto">
 				{viewMode === 'grid' ? (
-					<div className="p-4 grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+					<div className="p-4 grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 						{sortedProducts.map((product) => (
 							<ProductCard key={product.id} product={product} />
 						))}
