@@ -8,15 +8,17 @@ import { SasCasesListSkeleton } from "@/features/sas_cases/components/list-skele
 import { SasCasesFilter, type FilterValues } from "@/features/sas_cases/components/list-filter";
 import { Pagination } from "@/components/ui/pagination";
 import { PosButton, PosTabs, PosTabsList, PosTabsTrigger, PosTabsContent } from "@/components/pos";
-import { Plus, ShoppingCart, CheckCircle, List } from "lucide-react";
+import { Plus, ShoppingCart, CheckCircle, List, Lock } from "lucide-react";
 import { createEmptySasCase } from "@/features/sas_cases/actions/create-empty";
 import { format } from "date-fns";
 import type { SasCase } from "@/features/sas_cases/types";
+import { useStaff } from "@/app/auth/providers/StaffProvider";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function SasCasesPage() {
 	const router = useRouter();
+	const { logout } = useStaff();
 	const [isCreating, setIsCreating] = useState(false);
 	const [activeTab, setActiveTab] = useState("in-progress");
 	const [page, setPage] = useState(1);
@@ -86,6 +88,11 @@ export default function SasCasesPage() {
 		setPage(1);
 	};
 	
+	// 画面ロック
+	const handleLock = () => {
+		logout();
+	};
+	
 	const cases = data?.data || [];
 	const totalPages = Math.ceil(cases.length / 250); // API側で250件制限があるため
 	
@@ -97,14 +104,24 @@ export default function SasCasesPage() {
 					<List className="h-5 w-5" />
 					販売ケース一覧
 				</h1>
-				<PosButton 
-					size="default" 
-					onClick={handleCreateNewCase}
-					disabled={isCreating}
-				>
-					<Plus className="mr-2 h-4 w-4" />
-					新規販売開始
-				</PosButton>
+				<div className="flex items-center gap-2">
+					<PosButton
+						size="default"
+						variant="outline"
+						onClick={handleLock}
+					>
+						<Lock className="mr-2 h-4 w-4" />
+						画面ロック
+					</PosButton>
+					<PosButton 
+						size="default" 
+						onClick={handleCreateNewCase}
+						disabled={isCreating}
+					>
+						<Plus className="mr-2 h-4 w-4" />
+						新規販売開始
+					</PosButton>
+				</div>
 			</div>
 			
 			{/* タブ */}

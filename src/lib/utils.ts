@@ -7,3 +7,10 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
+
+/**
+ * 金額を日本円形式にフォーマットする
+ */
+export function formatCurrency(amount: number): string {
+	return `¥${amount.toLocaleString()}`;
+}

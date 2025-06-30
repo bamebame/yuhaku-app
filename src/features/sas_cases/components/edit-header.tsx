@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { PosButton } from "@/components/pos";
-import { Save, CheckCircle, ShoppingCart, Check, AlertCircle, Plus, List } from "lucide-react";
+import { Save, CheckCircle, ShoppingCart, Check, AlertCircle, Plus, List, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { updateSasCaseFormAction } from "@/features/sas_cases/actions";
 import { checkoutSasCaseFormAction } from "@/features/sas_cases/actions";
@@ -12,10 +12,12 @@ import { mutate } from "swr";
 import { CheckoutDialog, type PaymentData } from "./checkout-dialog";
 import { fetchMissingProductsForCase } from "@/features/sas_cases/helpers/fetch-missing-products";
 import { createEmptySasCase } from "@/features/sas_cases/actions/create-empty";
+import { useStaff } from "@/app/auth/providers/StaffProvider";
 
 export function SasCaseEditHeader() {
 	const router = useRouter();
 	const { toast } = useToast();
+	const { logout } = useStaff();
 	const [isSaving, setIsSaving] = useState(false);
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
 	const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
@@ -120,6 +122,10 @@ export function SasCaseEditHeader() {
 		} finally {
 			setIsCreatingNew(false);
 		}
+	};
+
+	const handleLock = () => {
+		logout();
 	};
 
 	const handleCheckoutConfirm = async (payments: PaymentData[]) => {
@@ -241,6 +247,14 @@ export function SasCaseEditHeader() {
 
 				{/* ボタングループ */}
 				<div className="flex items-center gap-2">
+					<PosButton
+						size="default"
+						variant="outline"
+						onClick={handleLock}
+					>
+						<Lock className="mr-2 h-4 w-4" />
+						画面ロック
+					</PosButton>
 					<PosButton
 						size="default"
 						variant="outline"

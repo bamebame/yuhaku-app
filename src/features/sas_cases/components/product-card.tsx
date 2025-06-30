@@ -6,6 +6,7 @@ import { useFilterStore } from "@/features/sas_cases/stores/filter-store";
 import { PosButton, PosCard } from "@/components/pos";
 import { Plus, Package, Heart } from "lucide-react";
 import { StockSelectionDialog } from "./stock-selection-dialog";
+import { ProductDetailDialog } from "./product-detail-dialog";
 import type { Product } from "@/features/products/types";
 import type { ItemStock } from "@/features/items/types";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ interface ProductCardProps {
 export function ProductCard({ product, isListView = false }: ProductCardProps) {
 	const [isAdding, setIsAdding] = useState(false);
 	const [showStockDialog, setShowStockDialog] = useState(false);
+	const [showDetailDialog, setShowDetailDialog] = useState(false);
 	const { productStocks, addToCart } = useSasCaseEditStore();
 	const { isFavorite, toggleFavorite } = useFilterStore();
 
@@ -27,7 +29,8 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 	const hasStock = totalStock > 0;
 	const defaultPrice = stocks[0]?.price || 0;
 
-	const handleAddToCart = async () => {
+	const handleAddToCart = async (e?: React.MouseEvent) => {
+		e?.stopPropagation(); // 親要素のクリックイベントを防ぐ
 		// 在庫が1つだけの場合は直接追加
 		const availableStocks = stocks.filter((stock) => stock.quantity > 0);
 		if (availableStocks.length === 1) {
@@ -65,7 +68,11 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 
 	if (isListView) {
 		return (
-			<div className="p-4 hover:bg-pos-hover transition-colors">
+			<>
+			<div 
+				className="p-4 hover:bg-pos-hover transition-colors cursor-pointer"
+				onClick={() => setShowDetailDialog(true)}
+			>
 				<div className="flex items-center gap-4">
 					{/* 商品画像 */}
 					<div className="w-20 h-20 bg-pos-light border-2 border-pos-border flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -125,20 +132,34 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 					</div>
 				</div>
 
-				{/* 在庫選択ダイアログ */}
-				<StockSelectionDialog
-					product={product}
-					stocks={stocks}
-					open={showStockDialog}
-					onOpenChange={setShowStockDialog}
-					onSelect={handleStockSelect}
-				/>
 			</div>
+
+			{/* 在庫選択ダイアログ */}
+			<StockSelectionDialog
+				product={product}
+				stocks={stocks}
+				open={showStockDialog}
+				onOpenChange={setShowStockDialog}
+				onSelect={handleStockSelect}
+			/>
+
+			{/* 商品詳細ダイアログ */}
+			<ProductDetailDialog
+				product={product}
+				open={showDetailDialog}
+				onOpenChange={setShowDetailDialog}
+				onAddToCart={(_, stock) => handleStockSelect(stock)}
+			/>
+			</>
 		);
 	}
 
 	return (
-		<PosCard className="relative p-3 flex flex-col gap-2 hover:bg-pos-hover transition-colors cursor-pointer">
+		<>
+		<PosCard 
+			className="relative p-3 flex flex-col gap-2 hover:bg-pos-hover transition-colors cursor-pointer"
+			onClick={() => setShowDetailDialog(true)}
+		>
 			{/* お気に入りボタン */}
 			<button
 				onClick={(e) => {
@@ -200,14 +221,24 @@ export function ProductCard({ product, isListView = false }: ProductCardProps) {
 				</PosButton>
 			</div>
 
-			{/* 在庫選択ダイアログ */}
-			<StockSelectionDialog
-				product={product}
-				stocks={stocks}
-				open={showStockDialog}
-				onOpenChange={setShowStockDialog}
-				onSelect={handleStockSelect}
-			/>
 		</PosCard>
+
+		{/* 在庫選択ダイアログ */}
+		<StockSelectionDialog
+			product={product}
+			stocks={stocks}
+			open={showStockDialog}
+			onOpenChange={setShowStockDialog}
+			onSelect={handleStockSelect}
+		/>
+
+		{/* 商品詳細ダイアログ */}
+		<ProductDetailDialog
+			product={product}
+			open={showDetailDialog}
+			onOpenChange={setShowDetailDialog}
+			onAddToCart={(_, stock) => handleStockSelect(stock)}
+		/>
+		</>
 	);
 }

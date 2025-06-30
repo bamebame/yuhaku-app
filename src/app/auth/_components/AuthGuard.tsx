@@ -3,23 +3,32 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { StaffCodeLock } from "./StaffCodeLock";
+import { useStaff } from "../hooks/useStaff";
+import { StaffAuthDialog } from "./StaffAuthDialog";
 
 interface AuthGuardProps {
 	children: React.ReactNode;
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-	const { user, loading, isLocked } = useAuth();
+	const { user, loading: authLoading } = useAuth();
+	const { 
+		isAuthenticated: isStaffAuthenticated, 
+		isLoading: staffLoading,
+		error: staffError,
+		authenticate 
+	} = useStaff();
 	const router = useRouter();
 
+	// Supabase認証チェック
 	useEffect(() => {
-		if (!loading && !user) {
+		if (!authLoading && !user) {
 			router.push("/auth/login");
 		}
-	}, [user, loading, router]);
+	}, [user, authLoading, router]);
 
-	if (loading) {
+	// ローディング中
+	if (authLoading || staffLoading) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
 				<div className="text-center">
@@ -30,12 +39,21 @@ export function AuthGuard({ children }: AuthGuardProps) {
 		);
 	}
 
+	// 未ログイン
 	if (!user) {
 		return null;
 	}
 
-	if (isLocked) {
-		return <StaffCodeLock />;
+	// スタッフ認証が必要
+	if (!isStaffAuthenticated) {
+		return (
+			<StaffAuthDialog
+				open={true}
+				onSuccess={authenticate}
+				isLoading={staffLoading}
+				error={staffError}
+			/>
+		);
 	}
 
 	return <>{children}</>;

@@ -32,7 +32,7 @@ export function MemberSearchModal({
   onConfirm,
   multiSelect = true
 }: MemberSearchModalProps) {
-  const [searchType, setSearchType] = useState<"code" | "keyword">("code");
+  const [searchType, setSearchType] = useState<"code" | "keyword">("keyword");
   const [searchValue, setSearchValue] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>(selectedMemberIds);
   

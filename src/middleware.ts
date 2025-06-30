@@ -66,6 +66,19 @@ export async function middleware(request: NextRequest) {
 		return NextResponse.redirect(new URL(redirectTo, request.url));
 	}
 
+	// APIルートへのリクエストにスタッフ情報を付与
+	if (pathname.startsWith("/api/") && user) {
+		// スタッフ情報をcookieから取得（実際の実装ではLocalStorageは使えないため、今後cookieベースに移行予定）
+		const staffId = request.cookies.get("staff_id")?.value || "";
+		const staffCode = request.cookies.get("staff_code")?.value || "";
+		
+		// ヘッダーに追加
+		supabaseResponse.headers.set("x-user-id", user.id);
+		supabaseResponse.headers.set("x-staff-id", staffId);
+		supabaseResponse.headers.set("x-staff-code", staffCode);
+		supabaseResponse.headers.set("x-request-id", crypto.randomUUID());
+	}
+
 	return supabaseResponse;
 }
 
