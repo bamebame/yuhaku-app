@@ -5,6 +5,7 @@ import { useSasCaseEditStore } from "@/features/sas_cases/stores/edit-store";
 import { PosButton, PosCard, PosInput } from "@/components/pos";
 import { User, FileText, Search, X } from "lucide-react";
 import { MemberSearchModal } from "@/features/members/components/search-modal";
+import { SurveySection } from "@/features/surveys/components/survey-section";
 import useSWR from "swr";
 import type { Member } from "@/features/members/types";
 
@@ -181,6 +182,9 @@ export function CustomerInfoPanel() {
 						</div>
 					</div>
 				</PosCard>
+
+				{/* 顧客アンケート */}
+				<SurveySection memberId={memberId} />
 			</div>
 
 			{/* 会員検索モーダル */}

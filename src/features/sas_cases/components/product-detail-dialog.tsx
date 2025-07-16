@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, Package, Barcode, Hash, Palette, Ruler, Globe, Info } from "lucide-react";
+import { X, Package, Barcode, Hash, Palette, Ruler, Globe, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { PosDialog, PosDialogContent, PosDialogHeader, PosDialogTitle } from "@/components/pos";
 import { PosButton } from "@/components/pos";
 import { PosTabs, PosTabsList, PosTabsTrigger, PosTabsContent } from "@/components/pos";
@@ -14,20 +14,45 @@ import { formatCurrency } from "@/lib/utils";
 
 interface ProductDetailDialogProps {
   product: Product | null;
+  products?: Product[]; // 商品リスト（ナビゲーション用）
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onProductChange?: (product: Product) => void; // 商品変更時のコールバック
   onAddToCart?: (product: Product, stock: ItemStock) => void;
 }
 
 export function ProductDetailDialog({
   product,
+  products = [],
   open,
   onOpenChange,
+  onProductChange,
   onAddToCart,
 }: ProductDetailDialogProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("basic");
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const productStocks = useSasCaseEditStore((state) => state.productStocks);
+  
+  // 現在の商品のインデックスを取得
+  const currentIndex = product ? products.findIndex(p => p.id === product.id) : -1;
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < products.length - 1;
+  
+  // 商品切り替え時に画像インデックスをリセット
+  const handleProductChange = (newProduct: Product) => {
+    setSelectedImageIndex(0);
+    setImageErrors(new Set());
+    onProductChange?.(newProduct);
+  };
+  
+  // 画像URLの検証とフォールバック
+  const getImageUrl = (index: number): string => {
+    if (!product || !product.imageUrls[index] || imageErrors.has(index)) {
+      return "/placeholder-product.svg";
+    }
+    return product.imageUrls[index];
+  };
   
   if (!product) return null;
   
@@ -37,37 +62,72 @@ export function ProductDetailDialog({
 
   return (
     <PosDialog open={open} onOpenChange={onOpenChange}>
-      <PosDialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <PosDialogHeader className="flex flex-row items-center justify-between border-b-3 border-pos-border pb-4">
-          <PosDialogTitle className="text-xl font-bold">商品詳細</PosDialogTitle>
-          <PosButton
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </PosButton>
-        </PosDialogHeader>
-        
-        <div className="grid grid-cols-2 gap-6 overflow-y-auto max-h-[calc(90vh-120px)] p-6">
+      <PosDialogContent className="fixed inset-0 max-w-none h-screen m-0 p-0 rounded-none border-0 [&>button]:hidden">
+        <div className="flex flex-col h-full">
+          {/* ヘッダー */}
+          <PosDialogHeader className="flex flex-row items-center justify-between border-b-3 border-pos-border px-6 py-4">
+            <div className="flex items-center gap-4">
+              <PosDialogTitle className="text-xl font-bold">商品詳細</PosDialogTitle>
+              {products.length > 0 && currentIndex >= 0 && (
+                <span className="text-sm text-pos-muted">
+                  {currentIndex + 1} / {products.length}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* 前の商品ボタン */}
+              {products.length > 0 && (
+                <PosButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => hasPrevious && handleProductChange(products[currentIndex - 1])}
+                  disabled={!hasPrevious}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </PosButton>
+              )}
+              {/* 次の商品ボタン */}
+              {products.length > 0 && (
+                <PosButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => hasNext && handleProductChange(products[currentIndex + 1])}
+                  disabled={!hasNext}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </PosButton>
+              )}
+              {/* 閉じるボタン */}
+              <PosButton
+                variant="ghost"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                className="h-8 w-8 p-0 ml-2"
+              >
+                <X className="h-4 w-4" />
+              </PosButton>
+            </div>
+          </PosDialogHeader>
+          
+          {/* コンテンツ */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-6 p-6">
           {/* 左側：画像エリア */}
           <div className="space-y-4">
             {/* メイン画像 */}
             <div className="relative aspect-square border-3 border-pos-border bg-pos-light overflow-hidden">
-              {product.imageUrls.length > 0 ? (
-                <Image
-                  src={product.imageUrls[selectedImageIndex] || "/placeholder.png"}
-                  alt={product.title}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Package className="h-24 w-24 text-pos-muted" />
-                </div>
-              )}
+              <Image
+                src={getImageUrl(selectedImageIndex)}
+                alt={product.title}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                onError={() => {
+                  setImageErrors(prev => new Set([...prev, selectedImageIndex]));
+                }}
+              />
             </div>
             
             {/* サムネイル画像 */}
@@ -84,11 +144,14 @@ export function ProductDetailDialog({
                     }`}
                   >
                     <Image
-                      src={url}
+                      src={getImageUrl(index)}
                       alt={`${product.title} ${index + 1}`}
                       fill
                       className="object-cover"
                       sizes="80px"
+                      onError={() => {
+                        setImageErrors(prev => new Set([...prev, index]));
+                      }}
                     />
                   </button>
                 ))}
@@ -166,7 +229,7 @@ export function ProductDetailDialog({
                       >
                         <div className="flex justify-between items-center">
                           <span className="font-semibold">
-                            ロケーション: {stock.locationName || `ID: ${stock.locationId}`}
+                            ロケーション: {stock.location.name || `ID: ${stock.location.id}`}
                           </span>
                           <PosBadge variant="outline">{stock.quantity}点</PosBadge>
                         </div>
@@ -256,6 +319,8 @@ export function ProductDetailDialog({
                 </div>
               </PosTabsContent>
             </PosTabs>
+          </div>
+            </div>
           </div>
         </div>
       </PosDialogContent>

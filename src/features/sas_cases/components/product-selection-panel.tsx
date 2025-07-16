@@ -246,13 +246,6 @@ export function ProductSelectionPanel() {
 			{/* フィルターコンテンツ */}
 			{activeTab && <FilterContent />}
 			
-			{/* 在庫データ取得中の表示 */}
-			{isLoadingItems && allProductIds.length > 0 && (
-				<div className="bg-pos-light border-b border-pos-border px-4 py-2 text-sm text-pos-muted">
-					在庫情報を取得中... ({allProductIds.length}件の商品)
-				</div>
-			)}
-			
 			{/* 在庫データ取得エラーの表示 */}
 			{itemsError && (
 				<div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-600">
@@ -273,7 +266,11 @@ export function ProductSelectionPanel() {
 					</div>
 				) : (
 					/* 通常の商品グリッド */
-					<ProductGrid products={displayedProducts} />
+					<ProductGrid 
+						products={displayedProducts} 
+						isLoadingInventory={isLoadingItems && allProductIds.length > 0}
+						loadingItemsCount={allProductIds.length}
+					/>
 				)}
 			</div>
 		</div>

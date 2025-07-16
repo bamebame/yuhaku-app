@@ -2,22 +2,30 @@
 
 import { useState, useMemo } from "react";
 import { ProductCard } from "./product-card";
+import { ProductDetailDialog } from "./product-detail-dialog";
 import type { Product } from "@/features/products/types";
-import { Grid, List, Package } from "lucide-react";
+import type { ItemStock } from "@/features/items/types";
+import { Grid, List, Package, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFilterStore } from "../stores/filter-store";
+import { useSasCaseEditStore } from "../stores/edit-store";
 
 interface ProductGridProps {
 	products: Product[];
+	isLoadingInventory?: boolean;
+	loadingItemsCount?: number;
 }
 
 type ViewMode = 'grid' | 'list';
 type SortOrder = 'newest' | 'name' | 'price-asc' | 'price-desc';
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, isLoadingInventory = false, loadingItemsCount = 0 }: ProductGridProps) {
 	const [viewMode, setViewMode] = useState<ViewMode>('grid');
 	const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+	const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+	const [showDetailDialog, setShowDetailDialog] = useState(false);
 	const { showInStockOnly } = useFilterStore();
+	const { addToCart } = useSasCaseEditStore();
 	
 	// 商品のソート
 	const sortedProducts = useMemo(() => {
@@ -46,6 +54,18 @@ export function ProductGrid({ products }: ProductGridProps) {
 		return sorted;
 	}, [products, sortOrder]);
 	
+	// 商品詳細を表示
+	const handleShowDetail = (product: Product) => {
+		setSelectedProduct(product);
+		setShowDetailDialog(true);
+	};
+	
+	// カートに追加
+	const handleAddToCart = (product: Product, stock: ItemStock) => {
+		// TODO: 特定の在庫を選択してカートに追加する機能を実装
+		addToCart(product, 1);
+		setShowDetailDialog(false);
+	};
 	
 	if (products.length === 0) {
 		return (
@@ -61,7 +81,15 @@ export function ProductGrid({ products }: ProductGridProps) {
 			{/* ヘッダー */}
 			<div className="flex items-center justify-between p-4 border-b border-pos-border">
 				<div className="flex items-center gap-3 text-sm">
-					<span>検索結果: <span className="font-bold">{products.length}</span>件</span>
+					<div className="flex items-center gap-2">
+						<span>検索結果: <span className="font-bold">{products.length}</span>件</span>
+						{isLoadingInventory && (
+							<div className="flex items-center gap-1 text-pos-muted">
+								<Loader2 className="h-3 w-3 animate-spin" />
+								<span className="text-xs">在庫情報を取得中...</span>
+							</div>
+						)}
+					</div>
 					{showInStockOnly && (
 						<span className="flex items-center gap-1 px-2 py-1 bg-pos-primary text-white rounded text-xs">
 							<Package className="h-3 w-3" />
@@ -121,17 +149,36 @@ export function ProductGrid({ products }: ProductGridProps) {
 				{viewMode === 'grid' ? (
 					<div className="p-4 grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 						{sortedProducts.map((product) => (
-							<ProductCard key={product.id} product={product} />
+							<ProductCard 
+								key={product.id} 
+								product={product}
+								onShowDetail={handleShowDetail}
+							/>
 						))}
 					</div>
 				) : (
 					<div className="divide-y-2 divide-pos-border">
 						{sortedProducts.map((product) => (
-							<ProductCard key={product.id} product={product} isListView={true} />
+							<ProductCard 
+								key={product.id} 
+								product={product} 
+								isListView={true}
+								onShowDetail={handleShowDetail}
+							/>
 						))}
 					</div>
 				)}
 			</div>
+			
+			{/* 商品詳細ダイアログ */}
+			<ProductDetailDialog
+				product={selectedProduct}
+				products={sortedProducts}
+				open={showDetailDialog}
+				onOpenChange={setShowDetailDialog}
+				onProductChange={setSelectedProduct}
+				onAddToCart={handleAddToCart}
+			/>
 		</div>
 	);
 }
