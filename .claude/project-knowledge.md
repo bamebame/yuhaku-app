@@ -1,5 +1,75 @@
 # プロジェクト技術知見
 
+## sas-case編集ページの実装
+
+### 実装済み機能
+1. **保存機能**
+   - Server ActionとZustandストアの連携
+   - goods配列の差分計算（CREATE/UPDATE/DELETE）
+   - parseWithZodのネスト配列問題を手動パースで解決
+
+2. **価格調整機能**
+   - 単品価格調整（unitAdjustment）
+   - ケース全体価格調整（caseAdjustment）
+   - インライン編集UI
+
+3. **在庫選択機能**
+   - 複数在庫ロケーションからの選択ダイアログ
+   - ItemStock型との統合
+
+4. **顧客情報管理**
+   - 会員ID入力
+   - スタッフメモ・お客様メモ
+   - タブUIでのカート・顧客情報切り替え
+
+### Zustand Storeの構成
+```typescript
+// edit-store.ts
+export interface CartItem {
+  id: string; // 一時ID
+  productId: string;
+  product: Product;
+  itemId: string; // ReCORE APIのitemId
+  quantity: number;
+  unitPrice: number;
+  locationId: number;
+  unitAdjustment: number;
+  action?: "CREATE" | "UPDATE" | "DELETE";
+  originalGoodsId?: string; // 既存goods更新時のID
+}
+
+// 顧客情報もストアで管理
+memberId: string | null;
+note: string | null;
+customerNote: string | null;
+```
+
+### Server ActionのFormData問題と解決策
+```typescript
+// update-form.ts
+// parseWithZodがネスト配列を正しくパースできないため、手動で抽出
+const data: any = {
+  goods: []
+};
+
+for (const [key, value] of formData.entries()) {
+  const goodsMatch = key.match(/^goods\[(\d+)\]\[(\w+)\]$/);
+  if (goodsMatch) {
+    const index = parseInt(goodsMatch[1]);
+    const field = goodsMatch[2];
+    if (!data.goods[index]) {
+      data.goods[index] = {};
+    }
+    // 型に応じて値を変換
+    if (field === 'quantity' || field === 'unitPrice' || field === 'unitAdjustment') {
+      data.goods[index][field] = parseInt(value as string);
+    } else {
+      data.goods[index][field] = value;
+    }
+  }
+}
+```
+
 ## アーキテクチャパターン
 
 ### Server Actions vs API Routes
@@ -86,6 +156,48 @@ import { mutate } from "swr"
 await mutate("/api/sas-cases")
 ```
 
+### 5. ReCORE API 422エラー
+**症状**: "Invalid or malformed JSON was provided"
+**原因**: GETリクエストでContent-Typeヘッダーを送信
+**解決策**: 
+- GETリクエストではContent-Typeヘッダーを送信しない
+- POST/PUT/PATCHリクエストの場合のみContent-Typeを追加
+```typescript
+// baseClient.ts
+if (config.method === "POST" || config.method === "PUT" || config.method === "PATCH") {
+  headers["Content-Type"] = "application/json";
+}
+```
+
+### 6. ReCORE API 403エラー
+**症状**: "アクセスが拒否されました"
+**原因**: 認証ヘッダーの誤り
+**解決策**: 
+- X-Identificationヘッダーを使用
+- Bearerプレフィックスは不要
+```typescript
+const headers: Record<string, string> = {
+  "X-Identification": JWT_KEY,
+  ...
+};
+```
+
+### 7. 無限ループエラー
+**症状**: useEffectが無限に実行される
+**原因**: 依存配列の不適切な設定
+**解決策**: 
+- useRefで前回値を追跡
+- ストアの値を直接参照
+- 不要な依存を削除
+```typescript
+const prevCategoriesRef = useRef<string>("");
+// 前回値と比較して変更時のみ更新
+if (categoriesJson !== prevCategoriesRef.current) {
+  prevCategoriesRef.current = categoriesJson;
+  setCategories(categoriesResponse.data);
+}
+```
+
 ## パフォーマンス最適化
 
 ### 1. 画像最適化
@@ -120,8 +232,8 @@ await mutate("/api/sas-cases")
 ### E2Eテスト（Playwright）
 ```bash
 # テストアカウント
-Email: test@example.com
-Password: TestTest123
+Email: test@novasto.co.jp
+Password: testtest
 StaffCode: TESTCODE01
 ```
 
@@ -132,4 +244,93 @@ npm run db:local
 
 # データベースリセット
 npm run db:reset
+```
+
+## 2025-01-31 POSデザインシステム実装
+
+### YUHAKU POS デザインシステム
+- **基本概念**: モノクローム・黒枠・シャープなデザイン
+- **実装内容**:
+  1. カスタムTailwindテーマ（pos-*カラー、borderWidth: 3px）
+  2. POSコンポーネントライブラリ作成
+     - PosButton, PosCard, PosInput, PosDialog, PosTabs, PosBadge
+     - PosLayout, PosHeader, PosTwoColumnLayout, PosMain
+  3. 既存コンポーネントのPOS対応
+     - sas-case編集ページの全面改修
+     - shadcn/uiからPOSコンポーネントへの移行
+
+### 技術的決定事項
+- **カラーパレット**: HSL値を使用（0 0% 0%形式）
+- **境界線**: 3px幅の黒枠をデフォルト
+- **角丸**: rounded-pos（0px）でシャープな外観
+- **フォントサイズ**: pos-xs〜pos-xlの専用サイズ
+- **レイアウト**: 2カラム構成（商品選択｜カート・顧客情報）
+
+## 2025-01-30 実装改善
+
+### ReCORE API接続の改善
+- **問題**: 環境変数設定後もAPI接続エラーが発生
+- **解決策**:
+  1. baseClient.tsにデバッグログ機能追加
+  2. JSONパースエラーの詳細ハンドリング
+  3. JWT設定の検証処理追加
+
+### 認証フローの修正
+- **問題**: ルーティングの不整合（/auth/signin vs /auth/login）
+- **解決策**:
+  1. すべてのリダイレクトを/auth/loginに統一
+  2. /auth/unlock/page.tsxを新規作成
+  3. middleware.tsでpublicRoutesを定義
+
+### UIコンポーネントの改善
+- **実装内容**:
+  1. shadcn/uiコンポーネントへの統一
+  2. 最小限のクラス指定でシンプルな実装
+  3. 再利用可能なコンポーネント作成
+
+### 新規作成コンポーネント
+- `components/error-boundary.tsx` - エラー境界（shadcn/ui Alert使用）
+- `components/loading-spinner.tsx` - ローディング表示（Lucide icons使用）
+- `components/api-error-fallback.tsx` - API エラー表示
+- `components/loading-card.tsx` - カードスケルトン
+
+### カスタムフック
+- `hooks/useSWRWithRetry.ts` - 指数バックオフリトライ機能付きSWR
+
+## 2025-06-24 Config API実装
+
+### 実装内容
+- ReCORE API `/configs` エンドポイントからの金種(payments)とレジ(cashiers)情報の取得
+- 24時間キャッシュ機能の実装（API RouteとSWR両方で設定）
+- 型安全な実装（ReCORE API型と内部型の分離）
+
+### 実装詳細
+1. **型定義**
+   - `RecorePayment`, `RecoreCashier` - ReCORE API型
+   - `Payment`, `Cashier` - 内部型
+   - 型変換関数での安全な変換
+
+2. **API実装**
+   - `ConfigClient` - ReCORE APIクライアント
+   - `/api/config` - API Route（revalidate: 86400で24時間キャッシュ）
+   - 型変換によるsnake_case → camelCase変換
+
+3. **フロントエンド実装**
+   - `useConfig()` - Config全体を取得
+   - `usePayments()` - 金種情報のみ取得
+   - `useCashiers()` - レジ情報のみ取得
+   - SWRの設定で24時間キャッシュ（dedupingInterval, refreshInterval）
+
+### 使用例
+```typescript
+// コンポーネントでの使用
+import { usePayments, useCashiers } from "@/features/config/hooks"
+
+export function CheckoutForm() {
+  const { payments, isLoading: isLoadingPayments } = usePayments()
+  const { cashiers, isLoading: isLoadingCashiers } = useCashiers()
+  
+  // 金種選択
+  // レジ選択
+}
 ```

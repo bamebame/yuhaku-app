@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - @.claude/project-knowledge.md - 技術的な知見とトラブルシューティング
 - @.claude/project-improvements.md - 改善履歴とバージョン管理
 - @.claude/common-patterns.md - よく使うコードパターンとテンプレート
+- @.claude/development-workflow.md - 開発タスクの標準ワークフロー
 
 ### Custom Commands
 - `/init` - プロジェクトコンテキストの再読み込み
@@ -28,6 +29,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Debug Commands
 - `DEBUG_FORM=true npm run dev` - フォームデバッグモード
 - `DEBUG_API=true npm run dev` - API通信デバッグモード
+
+### 開発サーバー管理ルール
+**🚨 最重要**: 開発サーバーを起動する前に、必ず既存のプロセスを確認・停止すること
+**🚨 重要**: バックグラウンドで開発サーバーを起動した場合は、必ず作業終了後に停止すること
+**🚨 重要**: テスト用に立ち上げた開発サーバーは必ず終了すること
+
+#### 起動前の必須確認手順
+```bash
+# 1. ポートが使用中でないか確認
+lsof -i :3000
+lsof -i :3001
+
+# 2. 既存のnext devプロセスを確認
+ps aux | grep -E "node.*dev|npm run dev|next dev" | grep -v grep
+
+# 3. 既存プロセスがある場合は停止
+lsof -ti :3000 | xargs -r kill -9
+lsof -ti :3001 | xargs -r kill -9
+# または
+ps aux | grep -E "npm run dev|next dev" | grep -v grep | awk '{print $2}' | xargs -r kill -9
+```
+
+#### 起動と停止（推奨方法）
+開発サーバー管理スクリプトを使用：
+```bash
+# スクリプトの設置
+mkdir -p ~/bin
+# ~/bin/yuhaku-dev スクリプトを作成
+
+# 使用方法
+~/bin/yuhaku-dev start    # 開発サーバーを起動
+~/bin/yuhaku-dev stop     # 開発サーバーを停止
+~/bin/yuhaku-dev restart  # 開発サーバーを再起動
+~/bin/yuhaku-dev status   # 状態確認
+~/bin/yuhaku-dev log      # ログ表示
+```
+
+#### 従来の方法（非推奨）
+- 起動: `npm run dev > /dev/null 2>&1 &`
+- 停止: `lsof -i :3000 -t | xargs -r kill -9`
+- 全プロセス停止: `pkill -f "next dev" || true`
+
+#### 注意事項
+- **絶対にプロセスを確認せずに起動しないこと**
+- 複数の開発サーバーが起動していると、ポート競合やメモリリークの原因となる
+- テスト終了時は必ずプロセスの終了を確認すること
+- ポート3000が使用中の場合、Next.jsは自動的に3001, 3002...と別ポートを使用するが、これは避けるべき
 
 ## Development Rules
 
@@ -195,9 +243,61 @@ src/features/sas_cases/actions/
 ### テスト実行
 - 開発サーバーを起動してPlaywrightで動作確認
 - テストアカウント:
-  - Email: test@example.com
-  - Password: TestTest123
+  - Email: test@novasto.co.jp
+  - Password: testtest
   - StaffCode: TESTCODE01
+
+### Playwright MCP使用時の注意点
+**重要**: Playwright MCPはDockerコンテナ内で動作するため、localhostへのアクセスに制限があります
+
+#### 問題と解決方法
+- **問題**: `localhost:3000`にアクセスすると、コンテナ内部のlocalhostを参照するため接続エラーになる
+- **解決方法**:
+  1. `172.17.0.1:3000` を使用（DockerブリッジゲートウェイIP）
+  2. `host.docker.internal:3000` を使用（Linux環境では追加設定が必要）
+  3. ホストマシンのLAN IP（例: `192.168.0.236:3000`）を使用
+
+#### 使用例
+```typescript
+// ❌ これは動作しない
+await mcp__playwright__browser_navigate({ url: "http://localhost:3000" })
+
+// ✅ これらは動作する
+await mcp__playwright__browser_navigate({ url: "http://172.17.0.1:3000" })
+await mcp__playwright__browser_navigate({ url: "http://host.docker.internal:3000" })
+```
+
+### Playwright MCPのエラー対処法
+
+#### ページクラッシュ時の対処
+1. **症状**: `Error: page.goto: Page crashed`
+2. **原因**: 特殊なドメイン（vusercontent.netなど）への初回アクセス時に発生することがある
+3. **対処法**:
+   ```typescript
+   // 1. ブラウザを閉じる
+   await mcp__playwright__browser_close()
+   
+   // 2. 通常のサイトにアクセスしてブラウザを初期化
+   await mcp__playwright__browser_navigate({ url: "https://example.com" })
+   
+   // 3. 目的のURLに再度アクセス
+   await mcp__playwright__browser_navigate({ url: "目的のURL" })
+   ```
+
+#### Target crashedエラー時の対処
+1. **症状**: `Error: page._wrapApiCall: Target crashed`
+2. **原因**: ブラウザプロセスがクラッシュしている
+3. **対処法**:
+   - ブラウザを閉じて新しいセッションを開始
+   - `mcp__playwright__browser_close()`を実行後、再度ナビゲート
+
+#### タイムアウトエラー時の対処
+1. **症状**: `TimeoutError: Timeout 30000ms exceeded`
+2. **原因**: Next.js dev tools portalなどの要素が干渉している可能性
+3. **対処法**:
+   - ページの読み込みを待つ
+   - 特定の要素が表示されるまで待機
+   - 必要に応じて`wait_for`ツールを使用
 
 ### コミット前チェックリスト
 1. [ ] `npm run lint` - エラーなし
@@ -276,6 +376,17 @@ export function SasCaseForm({ caseId }: { caseId: string }) {
 }
 ```
 
+## Development Workflow
+
+開発タスクの標準的なワークフローは @.claude/development-workflow.md を参照してください。
+
+主な内容:
+- タスク管理（TodoList活用）
+- 調査・探索フェーズ（gitingest.com、Context7 MCP）
+- 実装フェーズ
+- 品質保証フェーズ
+- 開発サーバー管理
+
 ## Troubleshooting
 
 ### よくある問題
@@ -283,5 +394,6 @@ export function SasCaseForm({ caseId }: { caseId: string }) {
 2. **フォームエラー**: Server Actionのシリアライゼーションを確認
 3. **認証エラー**: Supabaseセッションの有効性を確認
 4. **API通信エラー**: ReCORE API JWTトークンを確認
+5. **ReCORE API 422エラー**: GETリクエストではContent-Typeヘッダーを送信しない（POST/PUT/PATCHの場合のみ必要）
 
 詳細は @.claude/project-knowledge.md を参照してください。

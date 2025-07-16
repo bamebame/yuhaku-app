@@ -1,0 +1,19 @@
+
+> yuhaku@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.236:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1456ms
+ ○ Compiling /api/categories ...
+ ✓ Compiled /api/categories in 610ms (484 modules)
+ GET /api/categories 401 in 728ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1084ms (808 modules)
+ GET /api/categories 404 in 1179ms
+ ✓ Compiled in 96ms (320 modules)
+[?25h

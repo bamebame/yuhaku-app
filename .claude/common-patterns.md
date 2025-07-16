@@ -1,5 +1,94 @@
 # よく使うコードパターン
 
+## POSコンポーネントパターン
+
+### POSレイアウトの基本構造
+```tsx
+import { PosLayout, PosHeader, PosMain, PosTwoColumnLayout } from "@/components/pos/layout"
+
+export default function PosPage() {
+  return (
+    <PosLayout>
+      <PosHeader className="px-4 py-2">
+        {/* ヘッダーコンテンツ */}
+      </PosHeader>
+      <PosMain>
+        <PosTwoColumnLayout
+          left={<ProductSelectionPanel />}
+          right={<CartPanel />}
+        />
+      </PosMain>
+    </PosLayout>
+  )
+}
+```
+
+### POSボタンの使用例
+```tsx
+import { PosButton } from "@/components/pos"
+
+// 基本的なボタン
+<PosButton variant="default">追加</PosButton>
+<PosButton variant="secondary">キャンセル</PosButton>
+<PosButton variant="outline">編集</PosButton>
+
+// サイズバリエーション
+<PosButton size="sm">小</PosButton>
+<PosButton size="default">標準</PosButton>
+<PosButton size="lg">大</PosButton>
+```
+
+### POSカードの使用例
+```tsx
+import { PosCard, PosCardHeader, PosCardTitle, PosCardContent } from "@/components/pos"
+
+<PosCard>
+  <PosCardHeader>
+    <PosCardTitle>商品情報</PosCardTitle>
+  </PosCardHeader>
+  <PosCardContent>
+    {/* コンテンツ */}
+  </PosCardContent>
+</PosCard>
+```
+
+### POSタブの使用例
+```tsx
+import { PosTabs, PosTabsList, PosTabsTrigger, PosTabsContent } from "@/components/pos"
+
+<PosTabs value={activeTab} onValueChange={setActiveTab}>
+  <PosTabsList className="grid w-full grid-cols-2">
+    <PosTabsTrigger value="cart">カート</PosTabsTrigger>
+    <PosTabsTrigger value="customer">顧客情報</PosTabsTrigger>
+  </PosTabsList>
+  <PosTabsContent value="cart">
+    <CartPanel />
+  </PosTabsContent>
+  <PosTabsContent value="customer">
+    <CustomerInfoPanel />
+  </PosTabsContent>
+</PosTabs>
+```
+
+### POSカラーの使用
+```tsx
+// Tailwindクラスでの使用
+<div className="bg-pos-background text-pos-foreground">
+  <div className="border-3 border-pos-border">
+    <p className="text-pos-muted">補助テキスト</p>
+  </div>
+</div>
+
+// 利用可能なPOSカラー
+// pos-border: #000000
+// pos-background: #FFFFFF
+// pos-foreground: #000000
+// pos-muted: #666666
+// pos-accent: #000000
+// pos-light: #F5F5F5
+// pos-hover: #F0F0F0
+```
+
 ## Server Actionパターン
 
 ### 基本的なServer Action
