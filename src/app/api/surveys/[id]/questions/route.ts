@@ -59,13 +59,14 @@ const MOCK_QUESTIONS: SurveyQuestion[] = [
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const context = await createServerContext();
     
     // For now, return mock data if survey ID is 1
-    if (params.id === "1") {
+    if (id === "1") {
       console.log("[API] Returning mock questions for survey 1");
       return apiResponse.success(MOCK_QUESTIONS);
     }
@@ -74,7 +75,7 @@ export async function GET(
     const client = new SurveysClient(context);
     
     try {
-      const questions = await client.getQuestions(params.id);
+      const questions = await client.getQuestions(id);
       const convertedQuestions = questions.map(convertRecoreSurveyQuestionToSurveyQuestion);
       return apiResponse.success(convertedQuestions);
     } catch (recoreError) {

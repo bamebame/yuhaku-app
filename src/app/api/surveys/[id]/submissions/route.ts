@@ -7,9 +7,10 @@ import { getSubmission } from "../../mock-store";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const searchParams = request.nextUrl.searchParams;
     const memberId = searchParams.get("member_id");
     
@@ -18,16 +19,16 @@ export async function GET(
     }
     
     // For testing with survey ID 1, check mock store
-    if (params.id === "1") {
+    if (id === "1") {
       console.log("[API] Checking mock submission for survey 1, member", memberId);
-      const mockSubmission = getSubmission(params.id, memberId);
+      const mockSubmission = getSubmission(id, memberId);
       return apiResponse.success(mockSubmission);
     }
     
     const context = await createServerContext();
     const client = new SurveysClient(context);
     
-    const submission = await client.getMemberSubmission(params.id, memberId);
+    const submission = await client.getMemberSubmission(id, memberId);
     
     if (!submission) {
       return apiResponse.success(null);

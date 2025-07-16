@@ -1,5 +1,5 @@
 import { BaseClient } from "../baseClient";
-import type { ServerContext } from "@/lib/context/server-context";
+import type { ClientContext } from "@/lib/context/client-factory";
 import type {
   RecoreSurvey,
   RecoreSurveyQuestion,
@@ -7,7 +7,7 @@ import type {
 } from "./types";
 
 export class SurveysClient extends BaseClient {
-  constructor(context: ServerContext) {
+  constructor(context: ClientContext) {
     super(context);
   }
 

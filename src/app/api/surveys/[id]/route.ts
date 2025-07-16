@@ -6,13 +6,14 @@ import { convertRecoreSurveyToSurvey } from "@/features/surveys/recore/convert";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const context = await createServerContext();
     const client = new SurveysClient(context);
     
-    const survey = await client.getById(params.id);
+    const survey = await client.getById(id);
     
     if (!survey) {
       return apiResponse.error(new Error("Survey not found"));
