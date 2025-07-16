@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { createServerContext } from "@/lib/context/server-context";
 import { SurveysClient } from "@/lib/recore/surveys";
 import { apiResponse } from "@/app/api/_utils/response";

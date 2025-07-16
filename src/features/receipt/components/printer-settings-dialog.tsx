@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { PosButton, PosInput } from "@/components/pos";
 import { Label } from "@/components/ui/label";
-import { useReceiptPrinter } from "../hooks/use-receipt-printer";
+import type { useReceiptPrinter } from "../hooks/use-receipt-printer";
 import type { PrinterSettings } from "@/lib/receipt-printer";
 
 interface PrinterSettingsDialogProps {

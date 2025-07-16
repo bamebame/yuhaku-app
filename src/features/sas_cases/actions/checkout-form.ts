@@ -12,7 +12,7 @@ export async function checkoutSasCaseFormAction(
 	console.log("checkoutSasCaseFormAction called with id:", id);
 	
 	// FormDataから手動でデータを抽出
-	const data: any = {
+	const data: { charges: Array<Record<string, unknown>> } = {
 		charges: []
 	};
 	

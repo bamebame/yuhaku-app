@@ -59,7 +59,7 @@ export class StaffStorage {
       
       // 非アクティブタイムアウトチェック
       if (Date.now() - lastActivityTime > INACTIVITY_TIMEOUT) {
-        this.clear();
+        StaffStorage.clear();
         return null;
       }
 
@@ -110,7 +110,7 @@ export class StaffStorage {
    * スタッフが認証済みかチェック
    */
   static isAuthenticated(): boolean {
-    const staff = this.get();
+    const staff = StaffStorage.get();
     return staff !== null;
   }
 }

@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { createServerContext } from "@/lib/context/server-context";
 import { MembersClient } from "@/lib/recore/members";
 import { apiResponse } from "@/app/api/_utils/response";
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const client = new MembersClient(context);
     
     const searchParams = request.nextUrl.searchParams;
-    const params: any = {};
+    const params: Record<string, unknown> = {};
     
     // パラメータの取得
     const ids = searchParams.get("ids");

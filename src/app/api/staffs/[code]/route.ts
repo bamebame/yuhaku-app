@@ -1,7 +1,9 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { apiResponse } from "@/app/api/_utils/response";
-import { TEST_STAFF } from "@/features/staffs/types";
 import { createClient } from "@/lib/supabase/server";
+import { createServerContext } from "@/lib/context/server-context";
+import { StaffsClient } from "@/lib/recore/staffs";
+import { convertRecoreStaffToStaff } from "@/features/staffs/recore/convert";
 
 /**
  * GET /api/staffs/[code]
@@ -25,19 +27,23 @@ export async function GET(
     const { code } = await params;
     const staffCode = code.toUpperCase();
 
-    // テスト環境では固定のスタッフコードで認証
-    if (staffCode === TEST_STAFF.code) {
-      return apiResponse.success(TEST_STAFF);
+    // ReCORE APIからスタッフ情報を取得
+    try {
+      const context = await createServerContext();
+      const client = new StaffsClient(context);
+      
+      const recoreStaff = await client.getByCode(staffCode);
+
+      if (!recoreStaff) {
+        return apiResponse.notFound("スタッフコードが見つかりません");
+      }
+
+      const staff = convertRecoreStaffToStaff(recoreStaff);
+      return apiResponse.success(staff);
+    } catch (recoreError) {
+      console.error("[API] Staff fetch error from ReCORE:", recoreError);
+      return apiResponse.notFound("スタッフコードが見つかりません");
     }
-
-    // 本番環境ではReCORE APIを呼び出す
-    // TODO: ReCORE APIとの連携実装
-    // const context = await createServerContext();
-    // const client = new StaffsClient(context);
-    // const staff = await client.getByCode(staffCode);
-
-    // 現時点ではテストコード以外はエラー
-    return apiResponse.notFound("スタッフコードが見つかりません");
   } catch (error) {
     return apiResponse.error(error);
   }

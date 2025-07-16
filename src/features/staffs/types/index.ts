@@ -28,7 +28,7 @@ export const STAFF_CODE_LENGTH = 12;
 // テスト用スタッフ情報
 export const TEST_STAFF: Staff = {
   id: "1",
-  code: "SFH6L1ZMYHZK",
+  code: "TESTCODE01",
   name: "テストスタッフ",
   storeId: "1",
   storeName: "テスト店舗"

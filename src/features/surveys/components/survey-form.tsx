@@ -193,7 +193,7 @@ export function SurveyForm({
           </select>
         );
 
-      case "SCALE":
+      case "SCALE": {
         const scaleValue = (value as number) || 0;
         return (
           <div className="space-y-2">
@@ -213,6 +213,7 @@ export function SurveyForm({
             </div>
           </div>
         );
+      }
 
       default:
         return null;

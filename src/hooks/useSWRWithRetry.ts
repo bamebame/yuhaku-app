@@ -49,7 +49,7 @@ export function useSWRWithRetry<T>(
 		if (!key || retryCount >= maxRetries) return;
 
 		setIsRetrying(true);
-		const delay = retryDelay * Math.pow(retryDelayMultiplier, retryCount);
+		const delay = retryDelay * retryDelayMultiplier ** retryCount;
 
 		// 指数バックオフによる遅延
 		await new Promise((resolve) => setTimeout(resolve, delay));

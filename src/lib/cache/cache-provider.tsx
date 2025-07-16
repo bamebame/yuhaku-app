@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import type React from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import type { Product } from "@/features/products/types";
 import type { Category } from "@/features/categories/types";
 import type { CacheState, CacheConfig } from "./types";

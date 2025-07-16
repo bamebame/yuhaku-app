@@ -245,7 +245,7 @@ src/features/sas_cases/actions/
 - テストアカウント:
   - Email: test@novasto.co.jp
   - Password: testtest
-  - StaffCode: TESTCODE01
+  - StaffCode: SFWN727L0EXS
 
 ### Playwright MCP使用時の注意点
 **重要**: Playwright MCPはDockerコンテナ内で動作するため、localhostへのアクセスに制限があります
